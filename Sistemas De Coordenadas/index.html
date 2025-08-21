@@ -13,7 +13,24 @@
         <h3>Coordenadas em Tempo Real</h3>
         <hr>
         <p id="live-coords"></p>
+        <p id="clicked-coords"></p>
+        
+        <!-- Formul�rio para inserir coordenadas do mundo -->
+        <div id="world-coords-input">
+            <h3>Inserir Coordenadas do Mundo</h3>
+            <div>
+                <label for="input-x">X:</label>
+                <input type="number" id="input-x" step="any">
+            </div>
+            <div>
+                <label for="input-y">Y:</label>
+                <input type="number" id="input-y" step="any">
+            </div>
+            <button id="set-world-btn">Definir Ponto</button>
+        </div>
+        
         <div id="input-div">
+            <h3>Definir Limites do Mundo</h3>
             <div>
                 <label for="input-xmax">Xmax:</label>
                 <input type="number" id="input-xmax" value="100.3">
@@ -44,6 +61,7 @@
         <p id="credits2">Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
     </div>
 
+    <script src="conversoes.js"></script>
     <script src="script.js"></script>
 </body>
 

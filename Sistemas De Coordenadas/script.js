@@ -1,5 +1,5 @@
 // ===============================
-// Sele√ß√£o de elementos da interface (DOM)
+// SeleÁ„o de elementos da interface (DOM)
 // ===============================
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -8,7 +8,7 @@ const clickedCoords = document.getElementById("clicked-coords");
 let selectedPixel = null;
 
 // ===============================
-// Inicializa√ß√£o dos limites do sistema de coordenadas do mundo
+// InicializaÁ„o dos limites do sistema de coordenadas do mundo
 // ===============================
 let Xmax = 100.3;
 let Xmin = 10.5;
@@ -16,7 +16,7 @@ let Ymax = 100.4;
 let Ymin = 15.2;
 
 // ===============================
-// Atualiza√ß√£o dos valores dos limites na interface
+// AtualizaÁ„o dos valores dos limites na interface
 // ===============================
 document.getElementById("xmin").textContent = Xmin;
 document.getElementById("xmax").textContent = Xmax;
@@ -42,18 +42,29 @@ document.getElementById("set-coordinates-btn").addEventListener("click", () => {
         document.getElementById("xmax").textContent = Xmax;
         document.getElementById("ymin").textContent = Ymin;
         document.getElementById("ymax").textContent = Ymax;
+        
+        // Redesenha o pixel selecionado se existir
+        if (selectedPixel) {
+            setPixel(selectedPixel.x, selectedPixel.y);
+        }
     } else {
-        alert("Por favor, insira valores v√°lidos para as coordenadas.");
+        alert("Por favor, insira valores v·lidos para as coordenadas.");
     }
 });
 
 // ===============================
-// Fun√ß√£o para desenhar um pixel no canvas
+// FunÁ„o para desenhar um pixel no canvas
 // ===============================
 function setPixel(x, y) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "black";
-    ctx.fillRect(x, canvas.height - y, 1, 1); // Inverte Y na hora de desenhar
+    // Limpa apenas o pixel anterior (se existir)
+    if (selectedPixel) {
+        ctx.clearRect(selectedPixel.x - 2, canvas.height - selectedPixel.y - 2, 5, 5);
+    }
+    
+    // Desenha o novo pixel
+    ctx.fillStyle = "red";
+    ctx.fillRect(x - 2, canvas.height - y - 2, 5, 5); // Desenha um quadrado 5x5 para ser mais visÌvel
+    selectedPixel = { x, y };
 }
 
 // ===============================
@@ -64,7 +75,7 @@ canvas.addEventListener("mousemove", (event) => {
     const x = Math.round(event.clientX - rect.left);
     const y = Math.round(canvas.height - (event.clientY - rect.top));
 
-    // Calcula as convers√µes entre os sistemas de coordenadas
+    // Calcula as conversıes entre os sistemas de coordenadas
     const { ndcx, ndcy } = inpToNdc(x, y, canvas.width, canvas.height);
     const world = ndcToWd(ndcx, ndcy, Xmax, Xmin, Ymax, Ymin);
     const ndcCentral = wdToNdcCentral(world.worldX, world.worldY, Xmax, Xmin, Ymax, Ymin);
@@ -89,7 +100,7 @@ canvas.addEventListener("click", (event) => {
     selectedPixel = { x, y };
     setPixel(x, y);
 
-    // Calcula as convers√µes entre os sistemas de coordenadas
+    // Calcula as conversıes entre os sistemas de coordenadas
     const { ndcx, ndcy } = inpToNdc(x, y, canvas.width, canvas.height);
     const world = ndcToWd(ndcx, ndcy, Xmax, Xmin, Ymax, Ymin);
     const ndcCentral = wdToNdcCentral(world.worldX, world.worldY, Xmax, Xmin, Ymax, Ymin);
@@ -111,28 +122,31 @@ document.getElementById("set-world-btn").addEventListener("click", () => {
     const inputY = parseFloat(document.getElementById("input-y").value);
 
     if (isNaN(inputX) || isNaN(inputY)) {
-        alert("Por favor, insira coordenadas v√°lidas.");
+        alert("Por favor, insira coordenadas v·lidas.");
         return;
     }
 
     if (inputX < Xmin || inputX > Xmax || inputY < Ymin || inputY > Ymax) {
-        alert(`As coordenadas est√£o fora do intervalo permitido:\nX: [${Xmin}, ${Xmax}], Y: [${Ymin}, ${Ymax}]`);
+        alert(`As coordenadas est„o fora do intervalo permitido:\nX: [${Xmin}, ${Xmax}], Y: [${Ymin}, ${Ymax}]`);
         return;
     }
 
-    // Calcula as convers√µes entre os sistemas de coordenadas
+    // Converte coordenadas do mundo para NDC
     const ndcx = (inputX - Xmin) / (Xmax - Xmin);
     const ndcy = (inputY - Ymin) / (Ymax - Ymin);
 
+    // Converte NDC para coordenadas de dispositivo (pixel)
     const pixelX = Math.round(ndcx * (canvas.width - 1));
-    const pixelY = Math.round(ndcy * (canvas.height - 1));
+    const pixelY = Math.round((1 - ndcy) * (canvas.height - 1)); // Inverte Y
 
+    // Converte para NDC centralizada
     const ndccx = 2 * ndcx - 1;
     const ndccy = 2 * ndcy - 1;
 
+    // Desenha o pixel no canvas
     setPixel(pixelX, pixelY);
 
-    // Atualiza o painel de coordenadas do clique
+    // Atualiza o painel de coordenadas do ponto inserido
     clickedCoords.innerHTML = `
         <strong>Coordenadas de Mundo:</strong><br> (${inputX.toFixed(3)}, ${inputY.toFixed(3)})<br><br>
         <strong>Coordenadas NDC:</strong><br> (${ndcx.toFixed(3)}, ${ndcy.toFixed(3)})<br><br>
