@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circunferência</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="sidebar" id="left-bar">
+        <div class="coordenadas-cursor">
+            <h3>Coordenadas em Tempo Real</h3>
+            <hr>
+            <p id="live-coords">
+                <em>Mova o cursor sobre o canvas para ver as coordenadas e tempo real.</em>
+            </p>
+        </div>
+
+        <div class="active-pixel-coords">
+            <h3>Último Círculo Desenhado</h3>
+            <hr>
+            <div id="quadrant-info" style="margin-top:10px; font-weight:bold;"></div>
+            <p id="clicked-coords">
+                <em>Clique no canvas ou entre as informações e desenho um círculo.</em>
+            </p>
+        </div>
+
+        <div class="circle-buttons">
+            <h3>Desenhar Circunferência</h3>
+            <button id="btn-trig">Trigonométrico</button>
+            <button id="btn-poly">Polinomial</button>
+            <button id="btn-mid">Ponto Médio</button>
+        </div>
+
+        <div class="circle-inputs">
+            <div class="circle-coordinates">
+                <label for="input-cx">X:</label>
+                <input type="number" id="input-cx" value="0">
+                <label for="input-cy">Y:</label>
+                <input type="number" id="input-cy" value="0">
+                <label for="input-r">Raio:</label>
+                <input type="number" id="input-r" value="20">
+            </div>
+
+            <button id="set-circle-btn">Inserir Círculo</button>
+        </div>
+    </div>
+    <div class="main">
+        <canvas id="canvas" width="600" height="600"></canvas>
+        <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus, Vítor Raimundo</p>
+        <p id="credits2">Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

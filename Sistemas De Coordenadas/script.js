@@ -1,14 +1,15 @@
 // ===============================
-// SeleÁ„o de elementos da interface (DOM)
+// Sele√ß√£o de elementos da interface (DOM)
 // ===============================
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const liveCoords = document.getElementById("live-coords");
 const clickedCoords = document.getElementById("clicked-coords");
+const formulasDiv = document.getElementById("formulas");
 let selectedPixel = null;
 
 // ===============================
-// InicializaÁ„o dos limites do sistema de coordenadas do mundo
+// Inicializa√ß√£o dos limites do sistema de coordenadas do mundo
 // ===============================
 let Xmax = 100.3;
 let Xmin = 10.5;
@@ -16,7 +17,7 @@ let Ymax = 100.4;
 let Ymin = 15.2;
 
 // ===============================
-// AtualizaÁ„o dos valores dos limites na interface
+// Atualiza√ß√£o dos valores dos limites na interface
 // ===============================
 document.getElementById("xmin").textContent = Xmin;
 document.getElementById("xmax").textContent = Xmax;
@@ -42,29 +43,23 @@ document.getElementById("set-coordinates-btn").addEventListener("click", () => {
         document.getElementById("xmax").textContent = Xmax;
         document.getElementById("ymin").textContent = Ymin;
         document.getElementById("ymax").textContent = Ymax;
-        
+
         // Redesenha o pixel selecionado se existir
         if (selectedPixel) {
             setPixel(selectedPixel.x, selectedPixel.y);
         }
     } else {
-        alert("Por favor, insira valores v·lidos para as coordenadas.");
+        alert("Por favor, insira valores v√°lidos para as coordenadas.");
     }
 });
 
 // ===============================
-// FunÁ„o para desenhar um pixel no canvas
+// Fun√ß√£o para desenhar um pixel no canvas
 // ===============================
 function setPixel(x, y) {
-    // Limpa apenas o pixel anterior (se existir)
-    if (selectedPixel) {
-        ctx.clearRect(selectedPixel.x - 2, canvas.height - selectedPixel.y - 2, 5, 5);
-    }
-    
-    // Desenha o novo pixel
-    ctx.fillStyle = "red";
-    ctx.fillRect(x - 2, canvas.height - y - 2, 5, 5); // Desenha um quadrado 5x5 para ser mais visÌvel
-    selectedPixel = { x, y };
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "black";
+    ctx.fillRect(x, canvas.height - y, 1, 1); // Inverte Y na hora de desenhar
 }
 
 // ===============================
@@ -75,10 +70,13 @@ canvas.addEventListener("mousemove", (event) => {
     const x = Math.round(event.clientX - rect.left);
     const y = Math.round(canvas.height - (event.clientY - rect.top));
 
-    // Calcula as conversıes entre os sistemas de coordenadas
+    // Calcula as convers√µes entre os sistemas de coordenadas
     const { ndcx, ndcy } = inpToNdc(x, y, canvas.width, canvas.height);
+
     const world = ndcToWd(ndcx, ndcy, Xmax, Xmin, Ymax, Ymin);
+
     const ndcCentral = wdToNdcCentral(world.worldX, world.worldY, Xmax, Xmin, Ymax, Ymin);
+
     const device = ndcCentralToDc(ndcCentral.ndccx, ndcCentral.ndccy, canvas.width, canvas.height);
 
     // Atualiza o painel de coordenadas ao vivo
@@ -95,23 +93,28 @@ canvas.addEventListener("mousemove", (event) => {
 // ===============================
 canvas.addEventListener("click", (event) => {
     const rect = canvas.getBoundingClientRect();
-    const x = Math.round(event.clientX - rect.left);
-    const y = Math.round(canvas.height - (event.clientY - rect.top));
-    selectedPixel = { x, y };
-    setPixel(x, y);
+    const pixelX = Math.round(event.clientX - rect.left);
+    const pixelY = Math.round(canvas.height - (event.clientY - rect.top));
 
-    // Calcula as conversıes entre os sistemas de coordenadas
-    const { ndcx, ndcy } = inpToNdc(x, y, canvas.width, canvas.height);
+    // Converte de pixel para NDC [0,1]
+    const { ndcx, ndcy } = inpToNdc(pixelX, pixelY, canvas.width, canvas.height);
+
+    // Converte de NDC para coordenadas do mundo
     const world = ndcToWd(ndcx, ndcy, Xmax, Xmin, Ymax, Ymin);
+
+    // Define pixel selecionado no canvas
+    setPixel(pixelX, pixelY);
+
+    // Atualiza f√≥rmulas recebendo coordenadas do mundo
+    updateFormulas(world.worldX, world.worldY);
+
     const ndcCentral = wdToNdcCentral(world.worldX, world.worldY, Xmax, Xmin, Ymax, Ymin);
 
-    // Atualiza o painel de coordenadas do clique
     clickedCoords.innerHTML =
-        `   <strong>Coordenadas de Mundo:</strong><br> (${world.worldX.toFixed(3)}, ${world.worldY.toFixed(3)})<br><br>
-        <strong>Coordenadas NDC:</strong><br> (${ndcx.toFixed(3)}, ${ndcy.toFixed(3)})<br><br>
-        <strong>Coordenadas NDC Centralizada:</strong><br> (${ndcCentral.ndccx.toFixed(3)}, ${ndcCentral.ndccy.toFixed(3)})<br><br>
-        <strong>Coordenadas de Dispositivo:</strong><br> (${x}, ${y})
-    `;
+        `<strong>Coordenadas de Mundo:</strong><br> (${world.worldX.toFixed(3)}, ${world.worldY.toFixed(3)})<br><br>
+         <strong>Coordenadas NDC:</strong><br> (${ndcx.toFixed(3)}, ${ndcy.toFixed(3)})<br><br>
+         <strong>Coordenadas NDC Centralizada:</strong><br> (${ndcCentral.ndccx.toFixed(3)}, ${ndcCentral.ndccy.toFixed(3)})<br><br>
+         <strong>Coordenadas de Dispositivo:</strong><br> (${pixelX}, ${pixelY})`;
 });
 
 // ===============================
@@ -122,31 +125,29 @@ document.getElementById("set-world-btn").addEventListener("click", () => {
     const inputY = parseFloat(document.getElementById("input-y").value);
 
     if (isNaN(inputX) || isNaN(inputY)) {
-        alert("Por favor, insira coordenadas v·lidas.");
+        alert("Por favor, insira coordenadas v√°lidas.");
         return;
     }
 
     if (inputX < Xmin || inputX > Xmax || inputY < Ymin || inputY > Ymax) {
-        alert(`As coordenadas est„o fora do intervalo permitido:\nX: [${Xmin}, ${Xmax}], Y: [${Ymin}, ${Ymax}]`);
+        alert(`As coordenadas est√£o fora do intervalo permitido:\nX: [${Xmin}, ${Xmax}], Y: [${Ymin}, ${Ymax}]`);
         return;
     }
 
-    // Converte coordenadas do mundo para NDC
+    // Calcula as convers√µes entre os sistemas de coordenadas
     const ndcx = (inputX - Xmin) / (Xmax - Xmin);
     const ndcy = (inputY - Ymin) / (Ymax - Ymin);
 
-    // Converte NDC para coordenadas de dispositivo (pixel)
     const pixelX = Math.round(ndcx * (canvas.width - 1));
-    const pixelY = Math.round((1 - ndcy) * (canvas.height - 1)); // Inverte Y
+    const pixelY = Math.round(ndcy * (canvas.height - 1));
 
-    // Converte para NDC centralizada
     const ndccx = 2 * ndcx - 1;
     const ndccy = 2 * ndcy - 1;
 
-    // Desenha o pixel no canvas
     setPixel(pixelX, pixelY);
+    updateFormulas(inputX, inputY);
 
-    // Atualiza o painel de coordenadas do ponto inserido
+    // Atualiza o painel de coordenadas do clique
     clickedCoords.innerHTML = `
         <strong>Coordenadas de Mundo:</strong><br> (${inputX.toFixed(3)}, ${inputY.toFixed(3)})<br><br>
         <strong>Coordenadas NDC:</strong><br> (${ndcx.toFixed(3)}, ${ndcy.toFixed(3)})<br><br>
@@ -154,3 +155,61 @@ document.getElementById("set-world-btn").addEventListener("click", () => {
         <strong>Coordenadas de Dispositivo:</strong><br> (${pixelX}, ${pixelY}) 
     `;
 });
+
+// ===============================
+// Fun√ß√£o para atualizar f√≥rmulas
+// ===============================
+function updateFormulas(worldX, worldY) {
+    const ndcCentral = wdToNdcCentral(worldX, worldY, Xmax, Xmin, Ymax, Ymin);
+
+    const ndc01 = {
+        ndcx: (ndcCentral.ndccx + 1) / 2,
+        ndcy: (ndcCentral.ndccy + 1) / 2
+    };
+
+    const device = {
+        dcx: Math.round(ndc01.ndcx * (canvas.width - 1)),
+        dcy: Math.round(ndc01.ndcy * (canvas.height - 1))
+    };
+
+    formulasDiv.innerHTML = `
+<pre>
+<strong>Coordenadas de Mundo (entrada):</strong>
+worldX = ${worldX.toFixed(3)}
+worldY = ${worldY.toFixed(3)}
+
+<strong>Coordenadas NDC [0,1]:</strong>
+F√≥rmula: 
+ndcx = (ndccx+1)/2
+ndcy = (ndccy+1)/2
+Substituindo: 
+(${ndcCentral.ndccx.toFixed(3)}+1)/2
+(${ndcCentral.ndccy.toFixed(3)}+1)/2
+Resultado: 
+(${ndc01.ndcx.toFixed(3)})
+(${ndc01.ndcy.toFixed(3)})
+
+<strong>Coordenadas NDC Centralizada [-1,+1]:</strong>
+F√≥rmula: 
+ndccx = 2*((worldX-Xmin)/(Xmax-Xmin))-1
+ndccy = 2*((worldY-Ymin)/(Ymax-Ymin))-1
+Substituindo: 
+2*((${worldX.toFixed(3)} - ${Xmin.toFixed(3)}) / (${Xmax.toFixed(3)} - ${Xmin.toFixed(3)})) -1
+2*((${worldY.toFixed(3)} - ${Ymin.toFixed(3)}) / (${Ymax.toFixed(3)} - ${Ymin.toFixed(3)})) -1
+Resultado: 
+(${ndcCentral.ndccx.toFixed(3)})
+(${ndcCentral.ndccy.toFixed(3)})
+
+<strong>Coordenadas de Dispositivo (pixel):</strong>
+F√≥rmula: 
+dcx = ndcx*(width-1)
+dcy = ndcy*(height-1)
+Substituindo: 
+${ndc01.ndcx.toFixed(3)}*(${canvas.width}-1)
+${ndc01.ndcy.toFixed(3)}*(${canvas.height}-1)
+Resultado: 
+(${device.dcx})
+(${device.dcy})
+</pre>
+    `;
+}

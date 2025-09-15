@@ -10,14 +10,34 @@
 
 <body>
     <div class="sidebar" id="left-bar">
-        <h3>Coordenadas em Tempo Real</h3>
-        <hr>
-        <p id="live-coords"></p>
-        <p id="clicked-coords"></p>
-        
-        <!-- Formul�rio para inserir coordenadas do mundo -->
+        <div class="coordenadas-cursor">
+            <h3>Coordenadas em Tempo Real</h3>
+            <hr>
+            <p id="live-coords">
+                <em>Mova o cursor sobre o canvas para ver as coordenadas e tempo real.</em>
+            </p>
+        </div>
+
+        <div class="active-pixel-coords">
+            <h3>Coordenadas do Pixel Ativo</h3>
+            <hr>
+            <p id="clicked-coords">
+                <em>Clique no canvas ou defina um ponto do mundo para ver as coordenadas do pixel ativo.</em>
+            </p>
+        </div>
+
+        <div class="formulas-container">
+            <h3>Fórmulas</h3>
+            <hr />
+            <div id="formulas" class="formula-box">
+                <em>Clique no canvas ou defina um ponto do mundo para ver as fórmulas.</em>
+            </div>
+        </div>
+
+        <!-- Formulário para inserir coordenadas do mundo -->
+        <h3>Inserir Coordenadas do Mundo Manualmente</h3>
+        <hr />
         <div id="world-coords-input">
-            <h3>Inserir Coordenadas do Mundo</h3>
             <div>
                 <label for="input-x">X:</label>
                 <input type="number" id="input-x" step="any">
@@ -26,11 +46,12 @@
                 <label for="input-y">Y:</label>
                 <input type="number" id="input-y" step="any">
             </div>
-            <button id="set-world-btn">Definir Ponto</button>
+            <button id="set-world-btn">Ativar Pixel</button>
         </div>
-        
+
         <div id="input-div">
             <h3>Definir Limites do Mundo</h3>
+            <hr width="100%">
             <div>
                 <label for="input-xmax">Xmax:</label>
                 <input type="number" id="input-xmax" value="100.3">
