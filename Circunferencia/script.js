@@ -4,10 +4,11 @@ const liveCoords = document.getElementById("live-coords");
 const clickedCoords = document.getElementById("clicked-coords");
 const quadrantInfo = document.getElementById("quadrant-info");
 
-let Xmax = 100;
-let Xmin = -100;
-let Ymax = 100;
-let Ymin = -100;
+let Xmax = 255;
+let Xmin = -255;
+let Ymax = 255;
+let Ymin = -255;
+
 let circles = [];
 let activeMethod = "trig"; // padrão
 
@@ -83,21 +84,28 @@ function drawCircle(circle) {
     ctx.fillStyle = colors[method]; // cor de acordo com o tipo
 
     if (method === "trig") {
-        for (let theta = 0; theta < 2 * Math.PI; theta += 0.01) {
+        const step = 1 / Math.max(r, 1);
+        for (let theta = 0; theta < 2 * Math.PI; theta += step) {
             const wx = cx + r * Math.cos(theta);
             const wy = cy + r * Math.sin(theta);
-            points.push({ x: wx, y: wy });
             const { dx, dy } = worldToDevice(wx, wy);
             ctx.fillRect(dx, dy, 1, 1);
+            points.push({ x: wx, y: wy });
         }
     } else if (method === "poly") {
-        for (let x = -r; x <= r; x += 0.5) {
+        // passo adaptativo: inversamente proporcional ao raio
+        const step = 1 / Math.max(r / 20, 0.5);
+        for (let x = -r; x <= r; x += step) {
             const y = Math.sqrt(r * r - x * x);
+
             const px1 = cx + x, py1 = cy + y;
             const px2 = cx + x, py2 = cy - y;
-            points.push({ x: px1, y: py1 }, { x: px2, y: py2 });
-            ctx.fillRect(...Object.values(worldToDevice(px1, py1)), 1, 1);
-            ctx.fillRect(...Object.values(worldToDevice(px2, py2)), 1, 1);
+
+            [[px1, py1], [px2, py2]].forEach(([wx, wy]) => {
+                const { dx, dy } = worldToDevice(wx, wy);
+                ctx.fillRect(dx, dy, 1, 1);
+                points.push({ x: wx, y: wy });
+            });
         }
     } else if (method === "mid") {
         let x = 0, y = r, d = 1 - r;
@@ -135,19 +143,40 @@ function updateCircleInfo() {
 
     const div = document.createElement("div");
     div.style.border = "1px solid #000";
-    div.style.padding = "5px";
+    div.style.padding = "10px";
     div.style.marginBottom = "5px";
     div.style.width = "450px";
-    div.style.height = "200px";
+    div.style.height = "250px";
     div.style.overflow = "auto";
+    div.style.fontSize = "14px";
+    div.style.color = "#ccc";
+
+    const rows = c.points.map((p, idx) => `
+        <tr>
+            <td style="width: 20px;">P${idx + 1}</td>
+            <td style="width: 60px;">${p.x.toFixed(2)}</td>
+            <td style="width: 60px;">${p.y.toFixed(2)}</td>
+        </tr>
+    `).join("");
 
     div.innerHTML = `
-        Centro: (X: ${c.cx.toFixed(2)}, Y: ${c.cy.toFixed(2)})<br>
-        Raio: ${c.r}<br>
-        Tipo: ${c.method}<br>
-        Quadrante: ${getQuadrant(c.cx, c.cy)}<br><br>
+        <strong>Centro:</strong> (X: ${c.cx.toFixed(2)}, Y: ${c.cy.toFixed(2)})<br>
+        <strong>Raio:</strong> ${c.r}<br>
+        <strong>Tipo:</strong> ${c.method}<br>
+        <strong>Quadrante:</strong> ${getQuadrant(c.cx, c.cy)}<br><br>
         <strong>Coordenadas:</strong><br>
-        ${c.points.map((p, idx) => `X${idx + 1}: ${p.x.toFixed(2)}, Y${idx + 1}: ${p.y.toFixed(2)}`).join("<br>")}
+        <table border="1" cellpadding="4" cellspacing="0" style="border-collapse: collapse; font-size: 14px; width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">Ponto</th>
+                    <th style="width: 100px;">X</th>
+                    <th style="width: 100px;">Y</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows}
+            </tbody>
+        </table>
     `;
     clickedCoords.appendChild(div);
 }
@@ -211,6 +240,14 @@ canvas.addEventListener("mousemove", (event) => {
 
     liveCoords.innerHTML = `<strong>Coordenadas:</strong> X: (${wx.toFixed(2)}), Y: (${wy.toFixed(2)})`;
     quadrantInfo.innerHTML = `<strong>Quadrante:</strong> ${getQuadrant(wx, wy)}`;
+});
+
+const clearCirclesBtn = document.getElementById("clear-circles-btn");
+
+clearCirclesBtn.addEventListener("click", () => {
+    circles = [];
+    clickedCoords.innerHTML = "";
+    drawAll();
 });
 
 drawAll();

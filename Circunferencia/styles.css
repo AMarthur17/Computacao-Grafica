@@ -53,7 +53,7 @@ canvas {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
     background-color: white;
     display: block;
-    margin-bottom: 100px;
+    margin-bottom: 50px;
     max-width: 100%;
     height: auto;
 }
@@ -221,4 +221,16 @@ h3 {
     font-size: 13px;
     color: #ddd;
     margin-bottom: 5px;
+}
+
+#clear-circles-btn {
+    padding: 10px 60px;
+    background-color: #e53935;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s, transform 0.2s;
+    margin-bottom: 50px;
 }
