@@ -9,49 +9,56 @@
 </head>
 
 <body>
-    <div class="sidebar">
-        <div class="vertices-original">
+    <div class="sidebar" id="left-bar">
+
+        <div class="coordenadas-cursor">
             <h3>Vértices Originais</h3>
             <hr>
-            <p id="original-vertices"><em>Vértices do quadrado na origem.</em></p>
+            <pre id="original-vertices"><em>Selecione um objeto para ver os vértices na origem.</em></pre>
         </div>
 
-        <div class="vertices-transformados">
+        <div class="active-pixel-coords">
+            <h3>Matriz de Transformação</h3>
+            <hr>
+            <pre id="matrix-info"><em>A matriz homogênea será mostrada aqui.</em></pre>
+        </div>
+
+        <div class="active-pixel-coords">
             <h3>Vértices Transformados</h3>
             <hr>
-            <p id="transformed-vertices"><em>Resultados das transformações aparecerão aqui.</em></p>
+            <pre id="transformed-vertices"><em>Os vértices resultantes das transformações aparecerão aqui.</em></pre>
         </div>
 
-        <div class="transformacoes">
+        <div class="circle-buttons">
+            <h3>Selecionar Objeto</h3>
+            <select id="shapeSelector">
+                <option value="triangle">Triângulo</option>
+                <option value="square" selected>Quadrado</option>
+                <option value="pentagon">Pentágono</option>
+                <option value="house">Casa</option>
+            </select>
+        </div>
+
+        <div class="circle-inputs">
             <h3>Transformações</h3>
-            <div class="inputs-row">
+            <div class="circle-coordinates">
                 <label for="translateX">Transl X:</label>
                 <input type="number" id="translateX" value="0">
                 <label for="translateY">Transl Y:</label>
                 <input type="number" id="translateY" value="0">
             </div>
-            <div class="inputs-row">
+            <div class="circle-coordinates">
                 <label for="rotationAngle">Rotação (°):</label>
                 <input type="number" id="rotationAngle" value="0">
             </div>
-            <div class="inputs-row">
+            <div class="circle-coordinates">
                 <label for="scaleX">Escala X:</label>
                 <input type="number" id="scaleX" value="1">
                 <label for="scaleY">Escala Y:</label>
                 <input type="number" id="scaleY" value="1">
             </div>
-            <div class="inputs-row">
-                <label for="shearX">Cisalhamento X:</label>
-                <input type="number" id="shearX" value="0">
-                <label for="shearY">Cisalhamento Y:</label>
-                <input type="number" id="shearY" value="0">
-            </div>
-            <div class="buttons">
-                <button id="btnApplyTransform">Aplicar TRS</button>
-                <button id="btnApplyShear">Aplicar Shear</button>
-                <button id="btnReflectX">Refletir X</button>
-                <button id="btnReflectY">Refletir Y</button>
-                <button id="btnReflectOrigin">Refletir Origem</button>
+            <div class="circle-buttons">
+                <button id="btnApplyTransform">Aplicar Transformação</button>
                 <button id="btnResetShape">Resetar</button>
             </div>
         </div>

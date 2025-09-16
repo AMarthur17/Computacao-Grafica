@@ -1,114 +1,181 @@
-// ========== TRANSFORMAÇÕES 2D COM COORDENADAS HOMOGÊNEAS ==========
+// --- Formas na origem ---
+const shapes = {
+    triangle: [{ x: 0, y: 58 }, { x: -50, y: -29 }, { x: 50, y: -29 }],
+    square: [{ x: -50, y: -50 }, { x: 50, y: -50 }, { x: 50, y: 50 }, { x: -50, y: 50 }],
+    pentagon: [{ x: 0, y: 80 }, { x: 76, y: 25 }, { x: 47, y: -65 }, { x: -47, y: -65 }, { x: -76, y: 25 }],
+    house: [{ x: -50, y: -50 }, { x: 50, y: -50 }, { x: 50, y: 50 }, { x: 0, y: 100 }, { x: -50, y: 50 }]
+};
 
-// --- Quadrado como único objeto ---
-let originalShapeVertices = [
-    {x:-50, y:-50}, {x:50, y:-50}, {x:50, y:50}, {x:-50, y:50}
-];
+let originalShapeVertices = [...shapes.square];
 let currentShapeVertices = [...originalShapeVertices];
 
-// --- Matrizes Homogêneas ---
-function createTranslationMatrix(tx, ty){ return [[1,0,tx],[0,1,ty],[0,0,1]]; }
-function createRotationMatrix(angle){
-    const rad = angle * Math.PI/180;
-    return [[Math.cos(rad),-Math.sin(rad),0],[Math.sin(rad),Math.cos(rad),0],[0,0,1]];
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const originalDiv = document.getElementById("original-vertices");
+const matrixDiv = document.getElementById("matrix-info");
+const transformedDiv = document.getElementById("transformed-vertices");
+
+// --- Adiciona uma div para mostrar o quadrante ---
+const quadrantInfo = document.createElement("div");
+quadrantInfo.style.marginTop = "10px";
+quadrantInfo.style.fontWeight = "bold";
+quadrantInfo.style.color = "#4CAF50";
+document.getElementById("left-bar").appendChild(quadrantInfo);
+
+// --- Matrizes ---
+function createTranslationMatrix(tx, ty) {
+    return [[1, 0, tx], [0, 1, ty], [0, 0, 1]];
 }
-function createScalingMatrix(sx, sy){ return [[sx,0,0],[0,sy,0],[0,0,1]]; }
-function createShearingMatrix(shx, shy){ return [[1,shx,0],[shy,1,0],[0,0,1]]; }
-function createReflectionMatrix(axis){
-    if(axis==='x') return [[1,0,0],[0,-1,0],[0,0,1]];
-    if(axis==='y') return [[-1,0,0],[0,1,0],[0,0,1]];
-    if(axis==='origin') return [[-1,0,0],[0,-1,0],[0,0,1]];
-    return [[1,0,0],[0,1,0],[0,0,1]];
+function createRotationMatrix(angleInDegrees) {
+    const rad = angleInDegrees * Math.PI / 180;
+    return [[Math.cos(rad), -Math.sin(rad), 0], [Math.sin(rad), Math.cos(rad), 0], [0, 0, 1]];
+}
+function createScalingMatrix(sx, sy) {
+    return [[sx, 0, 0], [0, sy, 0], [0, 0, 1]];
+}
+function multiplyMatrices(A, B) {
+    const result = [[0,0,0],[0,0,0],[0,0,0]];
+    for(let i=0;i<3;i++){
+        for(let j=0;j<3;j++){
+            for(let k=0;k<3;k++){
+                result[i][j] += A[i][k]*B[k][j];
+            }
+        }
+    }
+    return result;
+}
+function multiplyMatrixVector(matrix, vector) {
+    const [x, y] = [vector.x, vector.y];
+    const res = [0,0,0];
+    for(let i=0;i<3;i++){
+        res[i] = matrix[i][0]*x + matrix[i][1]*y + matrix[i][2]*1;
+    }
+    return {x: res[0], y: res[1]};
 }
 
-// --- Multiplicação ---
-function multiplyMatrices(A,B){
-    const res=[[0,0,0],[0,0,0],[0,0,0]];
-    for(let i=0;i<3;i++) for(let j=0;j<3;j++) for(let k=0;k<3;k++)
-        res[i][j]+=A[i][k]*B[k][j];
-    return res;
+// --- Aplicação TRS ---
+function applyTRS(tx=0, ty=0, angle=0, sx=1, sy=1){
+    const T = createTranslationMatrix(tx, ty);
+    const R = createRotationMatrix(angle);
+    const S = createScalingMatrix(sx, sy);
+    const M = multiplyMatrices(T, multiplyMatrices(R, S));
+
+    currentShapeVertices = originalShapeVertices.map(v => multiplyMatrixVector(M, v));
+    draw();
+    showInfo(M);
 }
 
-function multiplyMatrixVector(M,v){
-    const [x,y]=[v.x,v.y];
-    return {x: M[0][0]*x+M[0][1]*y+M[0][2],
-            y: M[1][0]*x+M[1][1]*y+M[1][2]};
-}
+// --- Desenho ---
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawGrid();
 
-// --- Aplicações ---
-function applyTRS(tx=0,ty=0,angle=0,sx=1,sy=1){
-    const M = multiplyMatrices(createTranslationMatrix(tx,ty),
-        multiplyMatrices(createRotationMatrix(angle), createScalingMatrix(sx,sy)));
-    currentShapeVertices = originalShapeVertices.map(v=>multiplyMatrixVector(M,v));
-    updateDisplay();
-}
-
-function applyShear(shx=0, shy=0){
-    const M = createShearingMatrix(shx, shy);
-    currentShapeVertices = currentShapeVertices.map(v=>multiplyMatrixVector(M,v));
-    updateDisplay();
-}
-
-function applyReflection(axis='x'){
-    const M = createReflectionMatrix(axis);
-    currentShapeVertices = currentShapeVertices.map(v=>multiplyMatrixVector(M,v));
-    updateDisplay();
-}
-
-function resetShape(){
-    currentShapeVertices = [...originalShapeVertices];
-    updateDisplay();
-}
-
-// --- Exibir Vértices ---
-function updateDisplay(){
-    document.getElementById('original-vertices').textContent =
-        JSON.stringify(originalShapeVertices);
-    document.getElementById('transformed-vertices').textContent =
-        JSON.stringify(currentShapeVertices);
-    drawShape();
-}
-
-// --- Canvas ---
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-function drawShape(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.save();
-    ctx.translate(canvas.width/2, canvas.height/2); // origem no centro
+    ctx.translate(canvas.width/2, canvas.height/2);
+
     ctx.beginPath();
-    const verts = currentShapeVertices;
-    ctx.moveTo(verts[0].x, -verts[0].y);
-    for(let i=1;i<verts.length;i++) ctx.lineTo(verts[i].x,-verts[i].y);
+    ctx.moveTo(currentShapeVertices[0].x, -currentShapeVertices[0].y);
+    for (let i=1;i<currentShapeVertices.length;i++) {
+        ctx.lineTo(currentShapeVertices[i].x, -currentShapeVertices[i].y);
+    }
     ctx.closePath();
-    ctx.strokeStyle='red';
-    ctx.lineWidth=2;
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 2;
     ctx.stroke();
+
+    ctx.restore();
+    detectQuadrant();
+}
+
+// --- Desenhar Grid e Eixos ---
+function drawGrid() {
+    ctx.save();
+    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.strokeStyle = "#ddd";
+    ctx.lineWidth = 0.5;
+
+    // Linhas de grade a cada 50px
+    for (let x = -canvas.width/2; x <= canvas.width/2; x += 50) {
+        ctx.beginPath();
+        ctx.moveTo(x, -canvas.height/2);
+        ctx.lineTo(x, canvas.height/2);
+        ctx.stroke();
+    }
+    for (let y = -canvas.height/2; y <= canvas.height/2; y += 50) {
+        ctx.beginPath();
+        ctx.moveTo(-canvas.width/2, y);
+        ctx.lineTo(canvas.width/2, y);
+        ctx.stroke();
+    }
+
+    // Eixos X e Y em destaque
+    ctx.strokeStyle = "#ff0000";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-canvas.width/2, 0);
+    ctx.lineTo(canvas.width/2, 0);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0, -canvas.height/2);
+    ctx.lineTo(0, canvas.height/2);
+    ctx.stroke();
+
     ctx.restore();
 }
 
+// --- Detectar Quadrante ---
+function detectQuadrant() {
+    const cx = currentShapeVertices.reduce((acc,v) => acc+v.x, 0) / currentShapeVertices.length;
+    const cy = currentShapeVertices.reduce((acc,v) => acc+v.y, 0) / currentShapeVertices.length;
+
+    let text = "⚪ Sobre os eixos";
+    if (cx > 0 && cy > 0) text = "🟩 Quadrante I (x>0, y>0)";
+    else if (cx < 0 && cy > 0) text = "🟦 Quadrante II (x<0, y>0)";
+    else if (cx < 0 && cy < 0) text = "🟨 Quadrante III (x<0, y<0)";
+    else if (cx > 0 && cy < 0) text = "🟥 Quadrante IV (x>0, y<0)";
+    quadrantInfo.textContent = "Posição da forma: " + text;
+}
+
+// --- Mostrar Info ---
+function formatVertices(vertices) {
+    return vertices.map((v, i) => {
+        return `x${i} = ${v.x.toFixed(2)} | y${i} = ${v.y.toFixed(2)}`;
+    }).join("\n");
+}
+
+function showInfo(matrix) {
+    originalDiv.textContent = formatVertices(originalShapeVertices);
+    matrixDiv.textContent = matrix.map(row => row.map(v => v.toFixed(2)).join("  ")).join("\n");
+    transformedDiv.textContent = formatVertices(currentShapeVertices);
+    detectQuadrant();
+}
+
+
 // --- Eventos ---
-document.getElementById('btnApplyTransform').onclick = ()=>{
-    applyTRS(
-        Number(document.getElementById('translateX').value),
-        Number(document.getElementById('translateY').value),
-        Number(document.getElementById('rotationAngle').value),
-        Number(document.getElementById('scaleX').value),
-        Number(document.getElementById('scaleY').value)
-    );
-};
+document.getElementById("btnApplyTransform").addEventListener("click", () => {
+    const tx = parseFloat(document.getElementById("translateX").value);
+    const ty = parseFloat(document.getElementById("translateY").value);
+    const angle = parseFloat(document.getElementById("rotationAngle").value);
+    const sx = parseFloat(document.getElementById("scaleX").value);
+    const sy = parseFloat(document.getElementById("scaleY").value);
+    applyTRS(tx, ty, angle, sx, sy);
+});
 
-document.getElementById('btnApplyShear').onclick = ()=>{
-    applyShear(
-        Number(document.getElementById('shearX').value),
-        Number(document.getElementById('shearY').value)
-    );
-};
+document.getElementById("btnResetShape").addEventListener("click", () => {
+    currentShapeVertices = [...originalShapeVertices];
+    draw();
+    showInfo([[1,0,0],[0,1,0],[0,0,1]]);
+});
 
-document.getElementById('btnReflectX').onclick = ()=>applyReflection('x');
-document.getElementById('btnReflectY').onclick = ()=>applyReflection('y');
-document.getElementById('btnReflectOrigin').onclick = ()=>applyReflection('origin');
-document.getElementById('btnResetShape').onclick = resetShape;
+document.getElementById("shapeSelector").addEventListener("change", (e) => {
+    originalShapeVertices = [...shapes[e.target.value]];
+    currentShapeVertices = [...originalShapeVertices];
+    draw();
+    showInfo([[1,0,0],[0,1,0],[0,0,1]]);
+});
 
-// --- Inicial ---
-updateDisplay();
+// --- Inicialização ---
+draw();
+showInfo([[1,0,0],[0,1,0],[0,0,1]]);
