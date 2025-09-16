@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformações Geométricas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="sidebar">
+        <div class="vertices-original">
+            <h3>Vértices Originais</h3>
+            <hr>
+            <p id="original-vertices"><em>Vértices do quadrado na origem.</em></p>
+        </div>
+
+        <div class="vertices-transformados">
+            <h3>Vértices Transformados</h3>
+            <hr>
+            <p id="transformed-vertices"><em>Resultados das transformações aparecerão aqui.</em></p>
+        </div>
+
+        <div class="transformacoes">
+            <h3>Transformações</h3>
+            <div class="inputs-row">
+                <label for="translateX">Transl X:</label>
+                <input type="number" id="translateX" value="0">
+                <label for="translateY">Transl Y:</label>
+                <input type="number" id="translateY" value="0">
+            </div>
+            <div class="inputs-row">
+                <label for="rotationAngle">Rotação (°):</label>
+                <input type="number" id="rotationAngle" value="0">
+            </div>
+            <div class="inputs-row">
+                <label for="scaleX">Escala X:</label>
+                <input type="number" id="scaleX" value="1">
+                <label for="scaleY">Escala Y:</label>
+                <input type="number" id="scaleY" value="1">
+            </div>
+            <div class="inputs-row">
+                <label for="shearX">Cisalhamento X:</label>
+                <input type="number" id="shearX" value="0">
+                <label for="shearY">Cisalhamento Y:</label>
+                <input type="number" id="shearY" value="0">
+            </div>
+            <div class="buttons">
+                <button id="btnApplyTransform">Aplicar TRS</button>
+                <button id="btnApplyShear">Aplicar Shear</button>
+                <button id="btnReflectX">Refletir X</button>
+                <button id="btnReflectY">Refletir Y</button>
+                <button id="btnReflectOrigin">Refletir Origem</button>
+                <button id="btnResetShape">Resetar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <canvas id="canvas" width="600" height="600"></canvas>
+        <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus, Vítor Raimundo</p>
+        <p id="credits2">Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
