@@ -14,12 +14,14 @@ p, h3 {
 }
 
 .sidebar {
-    width: 400px;
+    width: 500px;
     padding: 15px;
     background: #1e1e1e;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+    border-radius: 10px 0 0 10px;
     overflow-y: auto;
     border-right: 1px solid #333;
+    color: #e0e0e0;
 }
 
 .main {
@@ -29,23 +31,28 @@ p, h3 {
     align-items: center;
     justify-content: center;
     background: #181818;
+    position: relative;
 }
 
 canvas {
     border: 1px solid #555;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
     background-color: white;
     display: block;
     margin-bottom: 100px;
+    max-width: 100%;
+    height: auto;
 }
 
-#original-vertices, #transformed-vertices {
-    font-size: 13px;
+pre {
     background: #2a2a2a;
     padding: 10px;
     border-radius: 5px;
-    margin-bottom: 15px;
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
     color: #ccc;
+    font-family: "Courier New", monospace;
 }
 
 h3 {
@@ -55,55 +62,69 @@ h3 {
     color: #f0f0f0;
 }
 
-.sidebar input {
+#credits1,
+#credits2 {
+    color: #888;
+    padding: 0 20px;
+    margin-top: 0;
+    font-size: 16px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.sidebar input, select {
     padding: 6px;
     font-size: 13px;
-    width: 80px;
+    width: 100px;
+    box-sizing: border-box;
     background: #2c2c2c;
     color: #e0e0e0;
     border: 1px solid #555;
     border-radius: 4px;
 }
 
-.sidebar input:focus {
+.sidebar input:focus, select:focus {
     border: 2px solid #2196F3;
     outline: none;
     background: #333;
 }
 
-.inputs-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-    align-items: center;
-}
-
-.buttons button {
+.circle-buttons button {
     background-color: #464646;
     color: #fff;
     padding: 8px 15px;
     border: none;
     cursor: pointer;
     font-size: 14px;
-    margin-top: 5px;
+    margin-top: 10px;
     border-radius: 4px;
     width: 100%;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.2s;
 }
 
-.buttons button:hover {
+.circle-buttons button:hover {
     background-color: #2196F3;
+}
+
+.circle-inputs {
+    margin: 20px 0;
+    display: flex;
+    width: 100%;
+    text-align: center;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.circle-coordinates {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
 }
 
 .circle-inputs label {
     font-weight: bold;
     font-size: 13px;
     color: #ddd;
-}
-
-#credits1, #credits2 {
-    color: #888;
-    text-align: center;
-    margin: 0;
-    padding: 0 20px;
 }
