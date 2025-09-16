@@ -16,7 +16,7 @@ const originalDiv = document.getElementById("original-vertices");
 const matrixDiv = document.getElementById("matrix-info");
 const transformedDiv = document.getElementById("transformed-vertices");
 
-// --- Adiciona uma div para mostrar o quadrante ---
+// --- Div para quadrante ---
 const quadrantInfo = document.createElement("div");
 quadrantInfo.style.marginTop = "10px";
 quadrantInfo.style.fontWeight = "bold";
@@ -33,6 +33,9 @@ function createRotationMatrix(angleInDegrees) {
 }
 function createScalingMatrix(sx, sy) {
     return [[sx, 0, 0], [0, sy, 0], [0, 0, 1]];
+}
+function createShearMatrix(shx, shy) {
+    return [[1, shx, 0], [shy, 1, 0], [0, 0, 1]];
 }
 function multiplyMatrices(A, B) {
     const result = [[0,0,0],[0,0,0],[0,0,0]];
@@ -54,12 +57,19 @@ function multiplyMatrixVector(matrix, vector) {
     return {x: res[0], y: res[1]};
 }
 
-// --- Aplicação TRS ---
-function applyTRS(tx=0, ty=0, angle=0, sx=1, sy=1){
+// --- Aplicação TRSH ---
+function applyTRS(tx=0, ty=0, angle=0, sx=1, sy=1, shx=0, shy=0){
+    const startX = parseFloat(document.getElementById("startX").value);
+    const startY = parseFloat(document.getElementById("startY").value);
+
+    const Tstart = createTranslationMatrix(startX, startY);
     const T = createTranslationMatrix(tx, ty);
     const R = createRotationMatrix(angle);
     const S = createScalingMatrix(sx, sy);
-    const M = multiplyMatrices(T, multiplyMatrices(R, S));
+    const H = createShearMatrix(shx, shy);
+
+    // Ordem: posição inicial * T * R * S * H
+    const M = multiplyMatrices(Tstart, multiplyMatrices(T, multiplyMatrices(R, multiplyMatrices(S, H))));
 
     currentShapeVertices = originalShapeVertices.map(v => multiplyMatrixVector(M, v));
     draw();
@@ -68,19 +78,35 @@ function applyTRS(tx=0, ty=0, angle=0, sx=1, sy=1){
 
 // --- Desenho ---
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGrid();
+    // Fundo branco
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
     ctx.translate(canvas.width/2, canvas.height/2);
 
+    // Desenhar eixos X e Y
+    ctx.strokeStyle = "#ff0000"; // vermelho para destaque
+    ctx.lineWidth = 1.5;
+    // Eixo X
+    ctx.beginPath();
+    ctx.moveTo(-canvas.width/2, 0);
+    ctx.lineTo(canvas.width/2, 0);
+    ctx.stroke();
+    // Eixo Y
+    ctx.beginPath();
+    ctx.moveTo(0, -canvas.height/2);
+    ctx.lineTo(0, canvas.height/2);
+    ctx.stroke();
+
+    // Desenhar forma
     ctx.beginPath();
     ctx.moveTo(currentShapeVertices[0].x, -currentShapeVertices[0].y);
     for (let i=1;i<currentShapeVertices.length;i++) {
         ctx.lineTo(currentShapeVertices[i].x, -currentShapeVertices[i].y);
     }
     ctx.closePath();
-    ctx.strokeStyle = "#000";
+    ctx.strokeStyle = "#000"; // cor da forma
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -88,44 +114,7 @@ function draw() {
     detectQuadrant();
 }
 
-// --- Desenhar Grid e Eixos ---
-function drawGrid() {
-    ctx.save();
-    ctx.translate(canvas.width/2, canvas.height/2);
-    ctx.strokeStyle = "#ddd";
-    ctx.lineWidth = 0.5;
-
-    // Linhas de grade a cada 50px
-    for (let x = -canvas.width/2; x <= canvas.width/2; x += 50) {
-        ctx.beginPath();
-        ctx.moveTo(x, -canvas.height/2);
-        ctx.lineTo(x, canvas.height/2);
-        ctx.stroke();
-    }
-    for (let y = -canvas.height/2; y <= canvas.height/2; y += 50) {
-        ctx.beginPath();
-        ctx.moveTo(-canvas.width/2, y);
-        ctx.lineTo(canvas.width/2, y);
-        ctx.stroke();
-    }
-
-    // Eixos X e Y em destaque
-    ctx.strokeStyle = "#ff0000";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(-canvas.width/2, 0);
-    ctx.lineTo(canvas.width/2, 0);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(0, -canvas.height/2);
-    ctx.lineTo(0, canvas.height/2);
-    ctx.stroke();
-
-    ctx.restore();
-}
-
-// --- Detectar Quadrante ---
+// --- Quadrante ---
 function detectQuadrant() {
     const cx = currentShapeVertices.reduce((acc,v) => acc+v.x, 0) / currentShapeVertices.length;
     const cy = currentShapeVertices.reduce((acc,v) => acc+v.y, 0) / currentShapeVertices.length;
@@ -138,7 +127,7 @@ function detectQuadrant() {
     quadrantInfo.textContent = "Posição da forma: " + text;
 }
 
-// --- Mostrar Info ---
+// --- Info ---
 function formatVertices(vertices) {
     return vertices.map((v, i) => {
         return `x${i} = ${v.x.toFixed(2)} | y${i} = ${v.y.toFixed(2)}`;
@@ -152,7 +141,6 @@ function showInfo(matrix) {
     detectQuadrant();
 }
 
-
 // --- Eventos ---
 document.getElementById("btnApplyTransform").addEventListener("click", () => {
     const tx = parseFloat(document.getElementById("translateX").value);
@@ -160,7 +148,10 @@ document.getElementById("btnApplyTransform").addEventListener("click", () => {
     const angle = parseFloat(document.getElementById("rotationAngle").value);
     const sx = parseFloat(document.getElementById("scaleX").value);
     const sy = parseFloat(document.getElementById("scaleY").value);
-    applyTRS(tx, ty, angle, sx, sy);
+    const shx = parseFloat(document.getElementById("shearX").value);
+    const shy = parseFloat(document.getElementById("shearY").value);
+
+    applyTRS(tx, ty, angle, sx, sy, shx, shy);
 });
 
 document.getElementById("btnResetShape").addEventListener("click", () => {
