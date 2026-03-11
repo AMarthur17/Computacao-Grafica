@@ -81,55 +81,65 @@ function drawAll() {
 function drawCircle(circle) {
     const { cx, cy, r, method } = circle;
     const points = [];
-    ctx.fillStyle = colors[method]; // cor de acordo com o tipo
+    ctx.fillStyle = colors[method];
 
-    if (method === "trig") {
-        const step = 1 / Math.max(r, 1);
-        for (let theta = 0; theta < 2 * Math.PI; theta += step) {
-            const wx = cx + r * Math.cos(theta);
-            const wy = cy + r * Math.sin(theta);
-            const { dx, dy } = worldToDevice(wx, wy);
+    // função auxiliar para aplicar simetria de 8
+    function plotCirclePoints(x, y) {
+        const pts = [
+            [cx + x, cy + y], [cx - x, cy + y],
+            [cx + x, cy - y], [cx - x, cy - y],
+            [cx + y, cy + x], [cx - y, cy + x],
+            [cx + y, cy - x], [cx - y, cy - x]
+        ];
+        pts.forEach(([wx, wy]) => {
+            const { dx, dy } = worldToDevice(Math.round(wx), Math.round(wy));
             ctx.fillRect(dx, dy, 1, 1);
             points.push({ x: wx, y: wy });
-        }
-    } else if (method === "poly") {
-        // passo adaptativo: inversamente proporcional ao raio
-        const step = 1 / Math.max(r / 20, 0.5);
-        for (let x = -r; x <= r; x += step) {
-            const y = Math.sqrt(r * r - x * x);
+        });
+    }
 
-            const px1 = cx + x, py1 = cy + y;
-            const px2 = cx + x, py2 = cy - y;
+    // método trigonométrico
+    if (method === "trig") {
+        const step = 1 / r;
+        const thetaEnd = Math.PI / 4;
 
-            [[px1, py1], [px2, py2]].forEach(([wx, wy]) => {
-                const { dx, dy } = worldToDevice(wx, wy);
-                ctx.fillRect(dx, dy, 1, 1);
-                points.push({ x: wx, y: wy });
-            });
-        }
-    } else if (method === "mid") {
-        let x = 0, y = r, d = 1 - r;
-        function plotPoints(cx, cy, x, y) {
-            const pts = [
-                [cx + x, cy + y], [cx - x, cy + y],
-                [cx + x, cy - y], [cx - x, cy - y],
-                [cx + y, cy + x], [cx - y, cy + x],
-                [cx + y, cy - x], [cx - y, cy - x]
-            ];
-            pts.forEach(([wx, wy]) => {
-                const { dx, dy } = worldToDevice(wx, wy);
-                ctx.fillRect(dx, dy, 1, 1);
-                points.push({ x: wx, y: wy });
-            });
-        }
-        plotPoints(cx, cy, x, y);
-        while (x < y) {
-            x++;
-            if (d < 0) d += 2 * x + 1;
-            else { y--; d += 2 * (x - y) + 1; }
-            plotPoints(cx, cy, x, y);
+        for (let theta = 0; theta <= thetaEnd; theta += step) {
+            const x = r * Math.cos(theta);
+            const y = r * Math.sin(theta);
+            plotCirclePoints(x, y);
         }
     }
+
+    // método polinomial
+    else if (method === "poly") {
+        const step = 1;
+        const xend = r / Math.sqrt(2);
+
+        for (let x = 0; x <= xend; x += step) {
+            const y = Math.sqrt(r * r - x * x);
+            plotCirclePoints(x, y);
+        }
+    }
+
+    // método ponto médio
+    else if (method === "mid") {
+        let x = 0, y = r;
+        let d = 1 - r;
+
+        plotCirclePoints(x, y);
+
+        while (x < y) {
+            x++;
+            if (d < 0) {
+                d += 2 * x + 1; // pixel E
+            } else {
+                y--;            // pixel SE
+                d += 2 * (x - y) + 1;
+            }
+            plotCirclePoints(x, y);
+        }
+    }
+
     circle.points = points;
 }
 
