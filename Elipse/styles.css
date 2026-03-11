@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap');
+
+body {
+    display: flex;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Montserrat', Arial, sans-serif;
+    background: #121212;
+    color: #e0e0e0;
+}
+
+p,
+h3 {
+    user-select: none;
+}
+
+.sidebar {
+    width: 500px;
+    padding: 15px;
+    background: #1e1e1e;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+    border-radius: 10px 0 0 10px;
+    overflow-y: auto;
+    border-right: 1px solid #333;
+    position: relative;
+    color: #e0e0e0;
+}
+
+.main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #181818;
+    position: relative;
+}
+
+canvas {
+    border: 1px solid #555;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    background-color: white;
+    display: block;
+    margin-bottom: 50px;
+    max-width: 100%;
+    height: auto;
+}
+
+#live-coords,
+#clicked-coords {
+    font-size: 13px;
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    color: #ccc;
+}
+
+h3 {
+    font-size: 18px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: #f0f0f0;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #444;
+    margin: 10px 0;
+}
+
+#credits1,
+#credits2 {
+    color: #888;
+    padding: 0 20px;
+    margin-top: 0;
+    font-size: 16px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.sidebar div {
+    margin-bottom: 12px;
+}
+
+.sidebar input {
+    padding: 6px;
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+    background: #2c2c2c;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.sidebar input:focus {
+    border: 2px solid #2196F3;
+    outline: none;
+    background: #333;
+}
+
+.sidebar label {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #bbb;
+}
+
+button {
+    background-color: #2196F3;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 4px;
+    width: 100%;
+    transition: background 0.2s, transform 0.2s;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #1976D2;
+    transform: scale(1.02);
+}
+
+button:active {
+    background-color: #0D47A1;
+    transform: scale(0.98);
+}
+
+#clear-ellipses-btn {
+    background-color: #f44336;
+    margin-bottom: 20px;
+}
+
+#clear-ellipses-btn:hover {
+    background-color: #d32f2f;
+}
+
+.ellipse-coordinates {
+    margin-top: 15px;
+}
+
+#quadrant-info {
+    color: #4CAF50;
+    padding: 5px;
+    background: #2a2a2a;
+    border-radius: 3px;
+    text-align: center;
+}

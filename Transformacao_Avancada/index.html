@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformações Avançadas 2D</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="sidebar" id="left-bar">
+        <div class="shape-selection">
+            <h3>Selecionar Forma</h3>
+            <hr>
+            <select id="shape-select">
+                <option value="triangle">Triângulo</option>
+                <option value="square" selected>Quadrado</option>
+                <option value="pentagon">Pentágono</option>
+                <option value="house">Casa</option>
+            </select>
+            <button id="reset-btn">Resetar Forma</button>
+        </div>
+
+        <div class="transformation-controls">
+            <h3>Transformações</h3>
+            <hr>
+
+            <label>Translação</label>
+            <div class="input-group">
+                <input type="number" id="tx" value="0" step="10"> X
+                <input type="number" id="ty" value="0" step="10"> Y
+            </div>
+
+            <label>Rotação (graus)</label>
+            <div class="input-group">
+                <input type="number" id="rotation" value="0" step="15">
+            </div>
+
+            <label>Escala</label>
+            <div class="input-group">
+                <input type="number" id="sx" value="1" step="0.1"> X
+                <input type="number" id="sy" value="1" step="0.1"> Y
+            </div>
+
+            <label>Cisalhamento (Shearing)</label>
+            <div class="input-group">
+                <input type="number" id="shx" value="0" step="0.1"> shX
+                <input type="number" id="shy" value="0" step="0.1"> shY
+            </div>
+
+            <label>Reflexão</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="reflect-x"> Refletir em X</label>
+                <label><input type="checkbox" id="reflect-y"> Refletir em Y</label>
+            </div>
+
+            <button id="apply-single-btn">Aplicar Transformação</button>
+        </div>
+
+        <div class="sequence-controls">
+            <h3>Sequência de Transformações</h3>
+            <hr>
+            <select id="transform-type">
+                <option value="translation">Translação</option>
+                <option value="rotation">Rotação</option>
+                <option value="scale">Escala</option>
+                <option value="shear">Cisalhamento</option>
+                <option value="reflection">Reflexão</option>
+            </select>
+            <button id="add-to-sequence-btn">Adicionar à Sequência</button>
+            <button id="apply-sequence-btn">Aplicar Sequência</button>
+            <button id="clear-sequence-btn" style="background-color: #f44336;">Limpar Sequência</button>
+        </div>
+
+        <div class="viewport-controls">
+            <h3>Janela do Mundo → Viewport</h3>
+            <hr>
+            <label>Janela do Mundo</label>
+            <div class="input-group">
+                <input type="number" id="world-xmin" value="-200" step="10"> xMin
+                <input type="number" id="world-xmax" value="200" step="10"> xMax
+            </div>
+            <div class="input-group">
+                <input type="number" id="world-ymin" value="-200" step="10"> yMin
+                <input type="number" id="world-ymax" value="200" step="10"> yMax
+            </div>
+
+            <label>Viewport</label>
+            <div class="input-group">
+                <input type="number" id="vp-xmin" value="100" step="10"> xMin
+                <input type="number" id="vp-xmax" value="400" step="10"> xMax
+            </div>
+            <div class="input-group">
+                <input type="number" id="vp-ymin" value="100" step="10"> yMin
+                <input type="number" id="vp-ymax" value="400" step="10"> yMax
+            </div>
+
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="enable-viewport"> Habilitar Viewport Mapping</label>
+                <label><input type="checkbox" id="enable-clipping"> Habilitar Recorte (Cohen-Sutherland)</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <canvas id="canvas" width="600" height="600"></canvas>
+        <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus, Vítor Raimundo</p>
+        <p id="credits2">Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
+    </div>
+
+    <div class="sidebar" id="right-bar">
+        <div class="matrix-display">
+            <h3>Matriz de Transformação</h3>
+            <hr>
+            <div id="matrix-info">
+                <p>Matriz Identidade (3×3)</p>
+                <code>
+                    [1  0  0]<br>
+                    [0  1  0]<br>
+                    [0  0  1]
+                </code>
+            </div>
+        </div>
+
+        <div class="sequence-display">
+            <h3>Sequência Atual</h3>
+            <hr>
+            <div id="sequence-list">
+                <em>Nenhuma transformação na sequência</em>
+            </div>
+        </div>
+
+        <div class="vertices-display">
+            <h3>Vértices Atuais</h3>
+            <hr>
+            <div id="vertices-info" style="max-height: 200px; overflow-y: auto;">
+                <em>Carregando...</em>
+            </div>
+        </div>
+
+        <div class="clipping-info">
+            <h3>Info de Recorte</h3>
+            <hr>
+            <div id="clip-stats">
+                <em>Recorte desabilitado</em>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

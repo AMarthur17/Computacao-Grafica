@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformações 3D - Projeção Isométrica</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="sidebar" id="left-bar">
+        <div class="object-selection">
+            <h3>Objeto 3D</h3>
+            <hr>
+            <select id="object-select">
+                <option value="cube" selected>Cubo</option>
+                <option value="pyramid">Pirâmide</option>
+                <option value="prism">Prisma Triangular</option>
+            </select>
+            <button id="generate-btn">Gerar Objeto</button>
+            <button id="reset-btn">Resetar</button>
+        </div>
+
+        <div class="transformation-controls">
+            <h3>Transformações 3D</h3>
+            <hr>
+
+            <label>Translação</label>
+            <div class="input-group">
+                <input type="number" id="tx" value="0" step="10"> X
+                <input type="number" id="ty" value="0" step="10"> Y
+                <input type="number" id="tz" value="0" step="10"> Z
+            </div>
+
+            <label>Rotação (graus)</label>
+            <div class="input-group">
+                <input type="number" id="rx" value="0" step="15"> X
+                <input type="number" id="ry" value="0" step="15"> Y
+                <input type="number" id="rz" value="0" step="15"> Z
+            </div>
+
+            <label>Escala</label>
+            <div class="input-group">
+                <input type="number" id="sx" value="1" step="0.1"> X
+                <input type="number" id="sy" value="1" step="0.1"> Y
+                <input type="number" id="sz" value="1" step="0.1"> Z
+            </div>
+
+            <label>Cisalhamento 3D (Shearing)</label>
+            <div class="input-group">
+                <input type="number" id="shxy" value="0" step="0.1"> XY
+                <input type="number" id="shxz" value="0" step="0.1"> XZ
+                <input type="number" id="shyz" value="0" step="0.1"> YZ
+            </div>
+
+            <label>Reflexão 3D</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="reflect-xy"> Plano XY</label>
+                <label><input type="checkbox" id="reflect-xz"> Plano XZ</label>
+                <label><input type="checkbox" id="reflect-yz"> Plano YZ</label>
+            </div>
+
+            <button id="apply-transform-btn">Aplicar Transformação</button>
+        </div>
+
+        <div class="camera-controls">
+            <h3>Câmera/Visualização</h3>
+            <hr>
+            <label>Rotação da Câmera (graus)</label>
+            <div class="input-group">
+                <input type="number" id="cam-rx" value="20" step="5"> X
+                <input type="number" id="cam-ry" value="25" step="5"> Y
+                <input type="number" id="cam-rz" value="0" step="5"> Z
+            </div>
+            <label>Zoom (%)</label>
+            <div class="input-group">
+                <input type="range" id="zoom" min="20" max="200" value="100" step="5">
+                <span id="zoom-value">100%</span>
+            </div>
+            <button id="update-view-btn">Atualizar Visualização</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <canvas id="canvas" width="700" height="700"></canvas>
+        <div class="projection-info">
+            <h3>Projeção Paralela Isométrica</h3>
+            <p>Os eixos X, Y e Z estão espaçados em 120°</p>
+        </div>
+        <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus, Vítor Raimundo</p>
+        <p id="credits2">Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
+    </div>
+
+    <div class="sidebar" id="right-bar">
+        <div class="object-info">
+            <h3>Informações do Objeto</h3>
+            <hr>
+            <div id="vertices-info">
+                <em>Nenhum objeto gerado</em>
+            </div>
+        </div>
+
+        <div class="matrix-display">
+            <h3>Matriz de Transformação (4×4)</h3>
+            <hr>
+            <div id="matrix-info">
+                <code>
+                    [1  0  0  0]<br>
+                    [0  1  0  0]<br>
+                    [0  0  1  0]<br>
+                    [0  0  0  1]
+                </code>
+            </div>
+        </div>
+
+        <div class="object-stats">
+            <h3>Estatísticas</h3>
+            <hr>
+            <div id="stats-info">
+                <p><strong>Centro:</strong> <span id="center-coords">-</span></p>
+                <p><strong>Dimensões:</strong> <span id="dimensions">-</span></p>
+                <p><strong>Vértices:</strong> <span id="vertex-count">-</span></p>
+                <p><strong>Arestas:</strong> <span id="edge-count">-</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

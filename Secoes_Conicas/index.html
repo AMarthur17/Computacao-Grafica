@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seções Cônicas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="sidebar" id="left-bar">
+        <div class="info-section">
+            <h3>Seções Cônicas</h3>
+            <hr>
+            <p style="font-size: 13px; line-height: 1.6;">
+                Este módulo visualiza seções cônicas usando a equação geral:<br>
+                <strong style="color: #4CAF50;">Ax² + Bxy + Cy² + Dx + Ey + F = 0</strong>
+            </p>
+        </div>
+
+        <div class="conic-inputs">
+            <h3>Coeficientes da Equação</h3>
+            <hr>
+
+            <label for="input-a">A (coef. de x²):</label>
+            <input type="number" id="input-a" value="1" step="0.1">
+
+            <label for="input-b">B (coef. de xy):</label>
+            <input type="number" id="input-b" value="0" step="0.1">
+
+            <label for="input-c">C (coef. de y²):</label>
+            <input type="number" id="input-c" value="1" step="0.1">
+
+            <label for="input-d">D (coef. de x):</label>
+            <input type="number" id="input-d" value="0" step="0.1">
+
+            <label for="input-e">E (coef. de y):</label>
+            <input type="number" id="input-e" value="0" step="0.1">
+
+            <label for="input-f">F (termo constante):</label>
+            <input type="number" id="input-f" value="-2500" step="1">
+
+            <button id="draw-conic-btn">Desenhar Cônica</button>
+            <button id="clear-btn" style="background-color: #f44336;">Limpar</button>
+        </div>
+
+        <div class="presets-section">
+            <h3>Exemplos Pré-definidos</h3>
+            <hr>
+            <button class="preset-btn" data-preset="circle">Círculo</button>
+            <button class="preset-btn" data-preset="ellipse">Elipse</button>
+            <button class="preset-btn" data-preset="parabola">Parábola</button>
+            <button class="preset-btn" data-preset="hyperbola">Hipérbole</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <canvas id="canvas" width="600" height="600"></canvas>
+        <div id="classification-display">
+            <h2 id="conic-type">-</h2>
+            <p id="discriminant-info">-</p>
+            <p id="equation-display">-</p>
+        </div>
+        <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus, Vítor Raimundo</p>
+        <p id="credits2">Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
+    </div>
+
+    <div class="sidebar" id="right-bar">
+        <div class="info-panel">
+            <h3>Classificação de Cônicas</h3>
+            <hr>
+            <div class="classification-rules">
+                <p><strong>Discriminante Δ = B² - 4AC</strong></p>
+                <ul>
+                    <li><strong style="color: #4CAF50;">Δ &lt; 0:</strong> Elipse ou Círculo
+                        <ul>
+                            <li>Se A = C: <strong>Círculo</strong></li>
+                            <li>Se A ≠ C: <strong>Elipse</strong></li>
+                        </ul>
+                    </li>
+                    <li><strong style="color: #FF9800;">Δ = 0:</strong> Parábola</li>
+                    <li><strong style="color: #F44336;">Δ &gt; 0:</strong> Hipérbole</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="coordenadas-cursor">
+            <h3>Coordenadas em Tempo Real</h3>
+            <hr>
+            <p id="live-coords">
+                <em>Mova o cursor sobre o canvas.</em>
+            </p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

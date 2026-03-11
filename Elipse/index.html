@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elipse - Ponto Médio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="sidebar" id="left-bar">
+        <div class="coordenadas-cursor">
+            <h3>Coordenadas em Tempo Real</h3>
+            <hr>
+            <p id="live-coords">
+                <em>Mova o cursor sobre o canvas para ver as coordenadas em tempo real.</em>
+            </p>
+        </div>
+
+        <div class="active-pixel-coords">
+            <h3>Última Elipse Desenhada</h3>
+            <hr>
+            <div id="quadrant-info" style="margin-top:10px; font-weight:bold;"></div>
+            <p id="clicked-coords">
+                <em>Clique no canvas ou entre as informações para desenhar uma elipse.</em>
+            </p>
+        </div>
+
+        <div class="ellipse-inputs">
+            <h3>Desenhar Elipse</h3>
+            <hr>
+            <div style="margin-top:20px; font-weight:bold; text-align: center;">
+                Algoritmo do Ponto Médio
+            </div>
+
+            <div class="ellipse-coordinates">
+                <label for="input-cx">Centro X:</label>
+                <input type="number" id="input-cx" value="0">
+
+                <label for="input-cy">Centro Y:</label>
+                <input type="number" id="input-cy" value="0">
+
+                <label for="input-rx">Semi-eixo a (horizontal):</label>
+                <input type="number" id="input-rx" value="80">
+
+                <label for="input-ry">Semi-eixo b (vertical):</label>
+                <input type="number" id="input-ry" value="50">
+            </div>
+
+            <button id="set-ellipse-btn">Inserir Elipse</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <canvas id="canvas" width="600" height="600"></canvas>
+        <button id="clear-ellipses-btn">Limpar Quadro</button>
+        <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus, Vítor Raimundo</p>
+        <p id="credits2">Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
