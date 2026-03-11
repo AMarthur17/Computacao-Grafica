@@ -35,11 +35,11 @@ function createScalingMatrix(sx, sy) {
     return [[sx, 0, 0], [0, sy, 0], [0, 0, 1]];
 }
 function multiplyMatrices(A, B) {
-    const result = [[0,0,0],[0,0,0],[0,0,0]];
-    for(let i=0;i<3;i++){
-        for(let j=0;j<3;j++){
-            for(let k=0;k<3;k++){
-                result[i][j] += A[i][k]*B[k][j];
+    const result = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            for (let k = 0; k < 3; k++) {
+                result[i][j] += A[i][k] * B[k][j];
             }
         }
     }
@@ -47,15 +47,15 @@ function multiplyMatrices(A, B) {
 }
 function multiplyMatrixVector(matrix, vector) {
     const [x, y] = [vector.x, vector.y];
-    const res = [0,0,0];
-    for(let i=0;i<3;i++){
-        res[i] = matrix[i][0]*x + matrix[i][1]*y + matrix[i][2]*1;
+    const res = [0, 0, 0];
+    for (let i = 0; i < 3; i++) {
+        res[i] = matrix[i][0] * x + matrix[i][1] * y + matrix[i][2] * 1;
     }
-    return {x: res[0], y: res[1]};
+    return { x: res[0], y: res[1] };
 }
 
 // --- Aplicação TRS ---
-function applyTRS(tx=0, ty=0, angle=0, sx=1, sy=1){
+function applyTRS(tx = 0, ty = 0, angle = 0, sx = 1, sy = 1) {
     const T = createTranslationMatrix(tx, ty);
     const R = createRotationMatrix(angle);
     const S = createScalingMatrix(sx, sy);
@@ -72,11 +72,11 @@ function draw() {
     drawGrid();
 
     ctx.save();
-    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.translate(canvas.width / 2, canvas.height / 2);
 
     ctx.beginPath();
     ctx.moveTo(currentShapeVertices[0].x, -currentShapeVertices[0].y);
-    for (let i=1;i<currentShapeVertices.length;i++) {
+    for (let i = 1; i < currentShapeVertices.length; i++) {
         ctx.lineTo(currentShapeVertices[i].x, -currentShapeVertices[i].y);
     }
     ctx.closePath();
@@ -91,21 +91,21 @@ function draw() {
 // --- Desenhar Grid e Eixos ---
 function drawGrid() {
     ctx.save();
-    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.strokeStyle = "#ddd";
     ctx.lineWidth = 0.5;
 
     // Linhas de grade a cada 50px
-    for (let x = -canvas.width/2; x <= canvas.width/2; x += 50) {
+    for (let x = -canvas.width / 2; x <= canvas.width / 2; x += 50) {
         ctx.beginPath();
-        ctx.moveTo(x, -canvas.height/2);
-        ctx.lineTo(x, canvas.height/2);
+        ctx.moveTo(x, -canvas.height / 2);
+        ctx.lineTo(x, canvas.height / 2);
         ctx.stroke();
     }
-    for (let y = -canvas.height/2; y <= canvas.height/2; y += 50) {
+    for (let y = -canvas.height / 2; y <= canvas.height / 2; y += 50) {
         ctx.beginPath();
-        ctx.moveTo(-canvas.width/2, y);
-        ctx.lineTo(canvas.width/2, y);
+        ctx.moveTo(-canvas.width / 2, y);
+        ctx.lineTo(canvas.width / 2, y);
         ctx.stroke();
     }
 
@@ -113,13 +113,13 @@ function drawGrid() {
     ctx.strokeStyle = "#ff0000";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(-canvas.width/2, 0);
-    ctx.lineTo(canvas.width/2, 0);
+    ctx.moveTo(-canvas.width / 2, 0);
+    ctx.lineTo(canvas.width / 2, 0);
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.moveTo(0, -canvas.height/2);
-    ctx.lineTo(0, canvas.height/2);
+    ctx.moveTo(0, -canvas.height / 2);
+    ctx.lineTo(0, canvas.height / 2);
     ctx.stroke();
 
     ctx.restore();
@@ -127,8 +127,8 @@ function drawGrid() {
 
 // --- Detectar Quadrante ---
 function detectQuadrant() {
-    const cx = currentShapeVertices.reduce((acc,v) => acc+v.x, 0) / currentShapeVertices.length;
-    const cy = currentShapeVertices.reduce((acc,v) => acc+v.y, 0) / currentShapeVertices.length;
+    const cx = currentShapeVertices.reduce((acc, v) => acc + v.x, 0) / currentShapeVertices.length;
+    const cy = currentShapeVertices.reduce((acc, v) => acc + v.y, 0) / currentShapeVertices.length;
 
     let text = "⚪ Sobre os eixos";
     if (cx > 0 && cy > 0) text = "🟩 Quadrante I (x>0, y>0)";
@@ -166,16 +166,16 @@ document.getElementById("btnApplyTransform").addEventListener("click", () => {
 document.getElementById("btnResetShape").addEventListener("click", () => {
     currentShapeVertices = [...originalShapeVertices];
     draw();
-    showInfo([[1,0,0],[0,1,0],[0,0,1]]);
+    showInfo([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
 });
 
 document.getElementById("shapeSelector").addEventListener("change", (e) => {
     originalShapeVertices = [...shapes[e.target.value]];
     currentShapeVertices = [...originalShapeVertices];
     draw();
-    showInfo([[1,0,0],[0,1,0],[0,0,1]]);
+    showInfo([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
 });
 
 // --- Inicialização ---
 draw();
-showInfo([[1,0,0],[0,1,0],[0,0,1]]);
+showInfo([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
