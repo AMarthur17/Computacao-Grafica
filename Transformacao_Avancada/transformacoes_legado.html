@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformacoes Avancadas 2D - Versao Original</title>
+    <link rel="stylesheet" href="styles_legado.css">
+</head>
+
+<body>
+    <div class="sidebar" id="left-bar">
+        <div class="nav-box">
+            <h3>Modulos da Pasta</h3>
+            <hr>
+            <a class="nav-link" href="index.html">Item 2 - Recorte e animacao</a>
+            <a class="nav-link active-link" href="transformacoes_legado.html">Item 3 - Transformacoes avancadas originais</a>
+        </div>
+
+        <div class="shape-selection">
+            <h3>Selecionar Forma</h3>
+            <hr>
+            <select id="shape-select">
+                <option value="triangle">Triangulo</option>
+                <option value="square" selected>Quadrado</option>
+                <option value="pentagon">Pentagono</option>
+                <option value="house">Casa</option>
+            </select>
+            <button id="reset-btn">Resetar Forma</button>
+        </div>
+
+        <div class="transformation-controls">
+            <h3>Transformacoes</h3>
+            <hr>
+
+            <label>Translacao</label>
+            <div class="input-group">
+                <input type="number" id="tx" value="0" step="10"> X
+                <input type="number" id="ty" value="0" step="10"> Y
+            </div>
+
+            <label>Rotacao (graus)</label>
+            <div class="input-group">
+                <input type="number" id="rotation" value="0" step="15">
+            </div>
+
+            <label>Escala</label>
+            <div class="input-group">
+                <input type="number" id="sx" value="1" step="0.1"> X
+                <input type="number" id="sy" value="1" step="0.1"> Y
+            </div>
+
+            <label>Cisalhamento (Shearing)</label>
+            <div class="input-group">
+                <input type="number" id="shx" value="0" step="0.1"> shX
+                <input type="number" id="shy" value="0" step="0.1"> shY
+            </div>
+
+            <label>Reflexao</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="reflect-x"> Refletir em X</label>
+                <label><input type="checkbox" id="reflect-y"> Refletir em Y</label>
+            </div>
+
+            <button id="apply-single-btn">Aplicar Transformacao</button>
+        </div>
+
+        <div class="sequence-controls">
+            <h3>Sequencia de Transformacoes</h3>
+            <hr>
+            <select id="transform-type">
+                <option value="translation">Translacao</option>
+                <option value="rotation">Rotacao</option>
+                <option value="scale">Escala</option>
+                <option value="shear">Cisalhamento</option>
+                <option value="reflection">Reflexao</option>
+            </select>
+            <button id="add-to-sequence-btn">Adicionar a Sequencia</button>
+            <button id="apply-sequence-btn">Aplicar Sequencia</button>
+            <button id="clear-sequence-btn" style="background-color: #f44336;">Limpar Sequencia</button>
+        </div>
+
+        <div class="viewport-controls">
+            <h3>Janela do Mundo para Viewport</h3>
+            <hr>
+            <label>Janela do Mundo</label>
+            <div class="input-group">
+                <input type="number" id="world-xmin" value="-200" step="10"> xMin
+                <input type="number" id="world-xmax" value="200" step="10"> xMax
+            </div>
+            <div class="input-group">
+                <input type="number" id="world-ymin" value="-200" step="10"> yMin
+                <input type="number" id="world-ymax" value="200" step="10"> yMax
+            </div>
+
+            <label>Viewport</label>
+            <div class="input-group">
+                <input type="number" id="vp-xmin" value="100" step="10"> xMin
+                <input type="number" id="vp-xmax" value="400" step="10"> xMax
+            </div>
+            <div class="input-group">
+                <input type="number" id="vp-ymin" value="100" step="10"> yMin
+                <input type="number" id="vp-ymax" value="400" step="10"> yMax
+            </div>
+
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="enable-viewport"> Habilitar Viewport Mapping</label>
+                <label><input type="checkbox" id="enable-clipping"> Habilitar Recorte (Cohen-Sutherland)</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <canvas id="canvas" width="600" height="600"></canvas>
+        <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus, Vitor Raimundo</p>
+        <p id="credits2">Computacao Grafica - Prof. Robson Pequeno de Sousa</p>
+    </div>
+
+    <div class="sidebar" id="right-bar">
+        <div class="matrix-display">
+            <h3>Matriz de Transformacao</h3>
+            <hr>
+            <div id="matrix-info">
+                <p>Matriz Identidade (3x3)</p>
+                <code>
+                    [1  0  0]<br>
+                    [0  1  0]<br>
+                    [0  0  1]
+                </code>
+            </div>
+        </div>
+
+        <div class="sequence-display">
+            <h3>Sequencia Atual</h3>
+            <hr>
+            <div id="sequence-list">
+                <em>Nenhuma transformacao na sequencia</em>
+            </div>
+        </div>
+
+        <div class="vertices-display">
+            <h3>Vertices Atuais</h3>
+            <hr>
+            <div id="vertices-info" style="max-height: 200px; overflow-y: auto;">
+                <em>Carregando...</em>
+            </div>
+        </div>
+
+        <div class="clipping-info">
+            <h3>Info de Recorte</h3>
+            <hr>
+            <div id="clip-stats">
+                <em>Recorte desabilitado</em>
+            </div>
+        </div>
+    </div>
+
+    <script src="script_legado.js"></script>
+</body>
+
+</html>
