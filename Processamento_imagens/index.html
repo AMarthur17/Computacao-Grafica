@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processamento de Imagens - Transformações Geométricas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar Esquerda -->
+        <div class="sidebar left-sidebar">
+            <h2>Carregar Imagem</h2>
+            <div class="section">
+                <input type="file" id="fileInput" accept=".pgm">
+                <button id="loadBtn" class="btn-primary">Carregar Imagem PGM</button>
+            </div>
+
+            <div class="section">
+                <h3>Imagens Pré-carregadas</h3>
+                <select id="preloadedSelect">
+                    <option value="">Selecione uma imagem...</option>
+                    <option value="assets/lena.pgm">Lena</option>
+                    <option value="assets/Lenag.pgm">Lena Gray</option>
+                    <option value="assets/Lenasalp.pgm">Lena Salt & Pepper</option>
+                    <option value="assets/Airplane.pgm">Airplane</option>
+                </select>
+                <button id="loadPreloadedBtn" class="btn-primary">Carregar</button>
+            </div>
+
+            <div class="section info-section">
+                <h3>Informações da Imagem</h3>
+                <div id="imageInfo" class="info-box">
+                    Nenhuma imagem carregada
+                </div>
+            </div>
+
+            <div class="section">
+                <button id="resetBtn" class="btn-secondary">Resetar para Original</button>
+                <button id="clearBtn" class="btn-danger">Limpar Tudo</button>
+            </div>
+        </div>
+
+        <!-- Área Central -->
+        <div class="main-content">
+            <h1>Processamento de Imagens - Transformações Geométricas</h1>
+
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <h3>Imagem Original</h3>
+                    <canvas id="originalCanvas"></canvas>
+                    <div id="originalDimensions" class="dimensions"></div>
+                </div>
+                <div class="canvas-wrapper">
+                    <h3>Imagem Transformada</h3>
+                    <canvas id="transformedCanvas"></canvas>
+                    <div id="transformedDimensions" class="dimensions"></div>
+                </div>
+            </div>
+
+            <div class="credits">
+                <p>Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus, Vítor Raimundo</p>
+                <p>Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
+            </div>
+        </div>
+
+        <!-- Sidebar Direita -->
+        <div class="sidebar right-sidebar">
+            <h2>Transformações</h2>
+
+            <!-- Translação -->
+            <div class="transform-section">
+                <h3>Translação</h3>
+                <div class="input-group">
+                    <label>Δx:</label>
+                    <input type="number" id="translateX" value="50" step="10">
+                </div>
+                <div class="input-group">
+                    <label>Δy:</label>
+                    <input type="number" id="translateY" value="50" step="10">
+                </div>
+                <button id="translateBtn" class="btn-transform">Aplicar Translação</button>
+            </div>
+
+            <!-- Escala -->
+            <div class="transform-section">
+                <h3>Escala</h3>
+                <div class="input-group">
+                    <label>Sx:</label>
+                    <input type="number" id="scaleX" value="1.5" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>Sy:</label>
+                    <input type="number" id="scaleY" value="1.5" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>
+                        <input type="checkbox" id="nearestNeighbor" checked>
+                        Nearest Neighbor
+                    </label>
+                </div>
+                <button id="scaleBtn" class="btn-transform">Aplicar Escala</button>
+            </div>
+
+            <!-- Rotação -->
+            <div class="transform-section">
+                <h3>Rotação</h3>
+                <div class="input-group">
+                    <label>Ângulo (°):</label>
+                    <input type="number" id="rotateAngle" value="45" step="15">
+                </div>
+                <div class="input-group">
+                    <label>Centro X:</label>
+                    <input type="number" id="rotateCenterX" value="0" placeholder="auto">
+                </div>
+                <div class="input-group">
+                    <label>Centro Y:</label>
+                    <input type="number" id="rotateCenterY" value="0" placeholder="auto">
+                </div>
+                <button id="rotateBtn" class="btn-transform">Aplicar Rotação</button>
+            </div>
+
+            <!-- Reflexão -->
+            <div class="transform-section">
+                <h3>Reflexão</h3>
+                <div class="input-group">
+                    <label>
+                        <input type="checkbox" id="reflectX">
+                        Reflexão em X
+                    </label>
+                </div>
+                <div class="input-group">
+                    <label>
+                        <input type="checkbox" id="reflectY">
+                        Reflexão em Y
+                    </label>
+                </div>
+                <button id="reflectBtn" class="btn-transform">Aplicar Reflexão</button>
+            </div>
+
+            <!-- Cisalhamento -->
+            <div class="transform-section">
+                <h3>Cisalhamento</h3>
+                <div class="input-group">
+                    <label>Shear X:</label>
+                    <input type="number" id="shearX" value="0.5" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>Shear Y:</label>
+                    <input type="number" id="shearY" value="0" step="0.1">
+                </div>
+                <button id="shearBtn" class="btn-transform">Aplicar Cisalhamento</button>
+            </div>
+
+            <!-- Histórico -->
+            <div class="section">
+                <h3>Histórico de Transformações</h3>
+                <div id="historyList" class="history-box">
+                    Nenhuma transformação aplicada
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

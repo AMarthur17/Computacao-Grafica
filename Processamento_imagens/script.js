@@ -1,0 +1,648 @@
+// ===============================
+// ELEMENTOS DO DOM
+// ===============================
+const fileInput = document.getElementById('fileInput');
+const loadBtn = document.getElementById('loadBtn');
+const preloadedSelect = document.getElementById('preloadedSelect');
+const loadPreloadedBtn = document.getElementById('loadPreloadedBtn');
+const resetBtn = document.getElementById('resetBtn');
+const clearBtn = document.getElementById('clearBtn');
+
+const originalCanvas = document.getElementById('originalCanvas');
+const transformedCanvas = document.getElementById('transformedCanvas');
+const originalCtx = originalCanvas.getContext('2d');
+const transformedCtx = transformedCanvas.getContext('2d');
+
+const imageInfoDiv = document.getElementById('imageInfo');
+const originalDimensionsDiv = document.getElementById('originalDimensions');
+const transformedDimensionsDiv = document.getElementById('transformedDimensions');
+const historyList = document.getElementById('historyList');
+
+// Botões de transformação
+const translateBtn = document.getElementById('translateBtn');
+const scaleBtn = document.getElementById('scaleBtn');
+const rotateBtn = document.getElementById('rotateBtn');
+const reflectBtn = document.getElementById('reflectBtn');
+const shearBtn = document.getElementById('shearBtn');
+
+// ===============================
+// VARIÁVEIS GLOBAIS
+// ===============================
+let originalImageData = null; // Dados originais da imagem
+let currentImageData = null;  // Dados atuais (após transformações)
+let originalWidth = 0;
+let originalHeight = 0;
+let history = [];
+
+// ===============================
+// ESTRUTURA DE DADOS DA IMAGEM
+// ===============================
+class ImageData2D {
+    constructor(width, height, pixels = null) {
+        this.width = width;
+        this.height = height;
+        this.pixels = pixels || new Array(height).fill(null).map(() => new Array(width).fill(0));
+    }
+
+    getPixel(x, y) {
+        if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+            return this.pixels[y][x];
+        }
+        return 0; // Retorna preto para pixels fora dos limites
+    }
+
+    setPixel(x, y, value) {
+        if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+            this.pixels[y][x] = value;
+        }
+    }
+}
+
+// ===============================
+// PARSER DE ARQUIVO PGM
+// ===============================
+function parsePGM(arrayBuffer) {
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    // Função para ler o cabeçalho byte a byte
+    let pos = 0;
+
+    // Pula espaços em branco
+    function skipWhitespace() {
+        while (pos < uint8Array.length &&
+            (uint8Array[pos] === 32 || uint8Array[pos] === 9 ||
+                uint8Array[pos] === 10 || uint8Array[pos] === 13)) {
+            pos++;
+        }
+    }
+
+    // Pula comentários
+    function skipComments() {
+        while (pos < uint8Array.length && uint8Array[pos] === 35) { // '#'
+            while (pos < uint8Array.length && uint8Array[pos] !== 10) { // até '\n'
+                pos++;
+            }
+            pos++; // pula o '\n'
+            skipWhitespace();
+        }
+    }
+
+    // Lê um token (palavra)
+    function readToken() {
+        skipWhitespace();
+        skipComments();
+        let token = '';
+        while (pos < uint8Array.length &&
+            uint8Array[pos] !== 32 && uint8Array[pos] !== 9 &&
+            uint8Array[pos] !== 10 && uint8Array[pos] !== 13 &&
+            uint8Array[pos] !== 35) {
+            token += String.fromCharCode(uint8Array[pos++]);
+        }
+        return token;
+    }
+
+    // Lê o tipo (P2 ou P5)
+    const magicNumber = readToken();
+
+    // Lê dimensões
+    const width = parseInt(readToken());
+    const height = parseInt(readToken());
+
+    // Lê valor máximo
+    const maxVal = parseInt(readToken());
+
+    // Pula um único caractere de espaço em branco após maxVal
+    if (pos < uint8Array.length &&
+        (uint8Array[pos] === 32 || uint8Array[pos] === 9 ||
+            uint8Array[pos] === 10 || uint8Array[pos] === 13)) {
+        pos++;
+    }
+
+    console.log(`Formato: ${magicNumber}, Dimensões: ${width}x${height}, Max: ${maxVal}, DataStart: ${pos}`);
+
+    const imageData = new ImageData2D(width, height);
+
+    if (magicNumber === 'P2') {
+        // Formato ASCII
+        let values = [];
+        while (pos < uint8Array.length) {
+            const token = readToken();
+            if (token) {
+                const num = parseInt(token);
+                if (!isNaN(num)) {
+                    values.push(num);
+                }
+            }
+            if (values.length >= width * height) break;
+        }
+
+        let idx = 0;
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                imageData.setPixel(x, y, values[idx++] || 0);
+            }
+        }
+    } else if (magicNumber === 'P5') {
+        // Formato binário
+        let idx = pos;
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                if (idx < uint8Array.length) {
+                    imageData.setPixel(x, y, uint8Array[idx++]);
+                }
+            }
+        }
+    }
+
+    return imageData;
+}
+
+// ===============================
+// RENDERIZAÇÃO NO CANVAS
+// ===============================
+function renderImage(imageData, canvas, ctx, dimensionsDiv) {
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+
+    const canvasImageData = ctx.createImageData(imageData.width, imageData.height);
+
+    for (let y = 0; y < imageData.height; y++) {
+        for (let x = 0; x < imageData.width; x++) {
+            const value = imageData.getPixel(x, y);
+            const idx = (y * imageData.width + x) * 4;
+            canvasImageData.data[idx] = value;     // R
+            canvasImageData.data[idx + 1] = value; // G
+            canvasImageData.data[idx + 2] = value; // B
+            canvasImageData.data[idx + 3] = 255;   // A
+        }
+    }
+
+    ctx.putImageData(canvasImageData, 0, 0);
+    dimensionsDiv.textContent = `${imageData.width} x ${imageData.height} pixels`;
+}
+
+// ===============================
+// CARREGAMENTO DE IMAGEM
+// ===============================
+function loadImage(arrayBuffer) {
+    try {
+        originalImageData = parsePGM(arrayBuffer);
+        currentImageData = new ImageData2D(originalImageData.width, originalImageData.height);
+
+        // Copia pixels
+        for (let y = 0; y < originalImageData.height; y++) {
+            for (let x = 0; x < originalImageData.width; x++) {
+                currentImageData.setPixel(x, y, originalImageData.getPixel(x, y));
+            }
+        }
+
+        originalWidth = originalImageData.width;
+        originalHeight = originalImageData.height;
+
+        renderImage(originalImageData, originalCanvas, originalCtx, originalDimensionsDiv);
+        renderImage(currentImageData, transformedCanvas, transformedCtx, transformedDimensionsDiv);
+
+        updateImageInfo();
+        history = [];
+        updateHistory();
+
+        enableTransformButtons();
+
+        alert('Imagem carregada com sucesso!');
+    } catch (error) {
+        console.error('Erro ao carregar imagem:', error);
+        alert('Erro ao carregar imagem PGM. Verifique o formato do arquivo.');
+    }
+}
+
+loadBtn.addEventListener('click', () => {
+    const file = fileInput.files[0];
+    if (!file) {
+        alert('Por favor, selecione um arquivo primeiro.');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => loadImage(e.target.result);
+    reader.readAsArrayBuffer(file);
+});
+
+loadPreloadedBtn.addEventListener('click', () => {
+    const path = preloadedSelect.value;
+    if (!path) {
+        alert('Por favor, selecione uma imagem.');
+        return;
+    }
+
+    fetch(path)
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => loadImage(arrayBuffer))
+        .catch(error => {
+            console.error('Erro ao carregar imagem pré-carregada:', error);
+            alert('Erro ao carregar imagem. Verifique se o arquivo existe.');
+        });
+});
+
+// ===============================
+// ATUALIZAÇÃO DA INTERFACE
+// ===============================
+function updateImageInfo() {
+    imageInfoDiv.innerHTML = `
+        <strong>Largura:</strong> ${originalWidth} px<br>
+        <strong>Altura:</strong> ${originalHeight} px<br>
+        <strong>Total de Pixels:</strong> ${originalWidth * originalHeight}<br>
+        <strong>Formato:</strong> PGM (Grayscale)
+    `;
+}
+
+function updateHistory() {
+    if (history.length === 0) {
+        historyList.innerHTML = 'Nenhuma transformação aplicada';
+    } else {
+        historyList.innerHTML = history.map((item, idx) =>
+            `<div class="history-item">${idx + 1}. ${item}</div>`
+        ).join('');
+    }
+}
+
+function enableTransformButtons() {
+    translateBtn.disabled = false;
+    scaleBtn.disabled = false;
+    rotateBtn.disabled = false;
+    reflectBtn.disabled = false;
+    shearBtn.disabled = false;
+}
+
+// ===============================
+// TRANSFORMAÇÕES GEOMÉTRICAS
+// ===============================
+
+// MATRIZ DE TRANSFORMAÇÃO 3x3 (Coordenadas Homogêneas)
+class TransformMatrix {
+    constructor() {
+        // Matriz identidade
+        this.matrix = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+        ];
+    }
+
+    multiply(other) {
+        const result = new TransformMatrix();
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                result.matrix[i][j] = 0;
+                for (let k = 0; k < 3; k++) {
+                    result.matrix[i][j] += this.matrix[i][k] * other.matrix[k][j];
+                }
+            }
+        }
+        return result;
+    }
+
+    transform(x, y) {
+        const newX = this.matrix[0][0] * x + this.matrix[0][1] * y + this.matrix[0][2];
+        const newY = this.matrix[1][0] * x + this.matrix[1][1] * y + this.matrix[1][2];
+        return { x: newX, y: newY };
+    }
+
+    static translation(dx, dy) {
+        const m = new TransformMatrix();
+        m.matrix[0][2] = dx;
+        m.matrix[1][2] = dy;
+        return m;
+    }
+
+    static scale(sx, sy) {
+        const m = new TransformMatrix();
+        m.matrix[0][0] = sx;
+        m.matrix[1][1] = sy;
+        return m;
+    }
+
+    static rotation(angleRadians) {
+        const m = new TransformMatrix();
+        const cos = Math.cos(angleRadians);
+        const sin = Math.sin(angleRadians);
+        m.matrix[0][0] = cos;
+        m.matrix[0][1] = -sin;
+        m.matrix[1][0] = sin;
+        m.matrix[1][1] = cos;
+        return m;
+    }
+
+    static reflection(reflectX, reflectY) {
+        const m = new TransformMatrix();
+        if (reflectX) m.matrix[1][1] = -1; // Espelha verticalmente
+        if (reflectY) m.matrix[0][0] = -1; // Espelha horizontalmente
+        return m;
+    }
+
+    static shear(shx, shy) {
+        const m = new TransformMatrix();
+        m.matrix[0][1] = shx;
+        m.matrix[1][0] = shy;
+        return m;
+    }
+}
+
+// APLICAR TRANSFORMAÇÃO NA IMAGEM
+function applyTransformation(matrix, useNearestNeighbor = true, isTranslation = false) {
+    if (!currentImageData) {
+        alert('Carregue uma imagem primeiro!');
+        return;
+    }
+
+    // Calcula os limites da nova imagem
+    const corners = [
+        { x: 0, y: 0 },
+        { x: currentImageData.width - 1, y: 0 },
+        { x: currentImageData.width - 1, y: currentImageData.height - 1 },
+        { x: 0, y: currentImageData.height - 1 }
+    ];
+
+    const transformedCorners = corners.map(c => matrix.transform(c.x, c.y));
+
+    let minX = Math.floor(Math.min(...transformedCorners.map(c => c.x)));
+    let maxX = Math.ceil(Math.max(...transformedCorners.map(c => c.x)));
+    let minY = Math.floor(Math.min(...transformedCorners.map(c => c.y)));
+    let maxY = Math.ceil(Math.max(...transformedCorners.map(c => c.y)));
+
+    // Para translação, mantém um canvas maior para visualizar o movimento
+    if (isTranslation) {
+        const padding = Math.max(originalWidth, originalHeight) * 2;
+        minX = Math.min(minX, -padding);
+        maxX = Math.max(maxX, currentImageData.width - 1 + padding);
+        minY = Math.min(minY, -padding);
+        maxY = Math.max(maxY, currentImageData.height - 1 + padding);
+    }
+
+    const newWidth = maxX - minX + 1;
+    const newHeight = maxY - minY + 1;
+
+    console.log(`Nova dimensão: ${newWidth}x${newHeight}, Offset: (${minX}, ${minY})`);
+
+    const newImageData = new ImageData2D(newWidth, newHeight);
+
+    // Matriz inversa para mapeamento reverso
+    const invMatrix = invertMatrix(matrix.matrix);
+
+    // Para cada pixel da imagem de destino, encontra o pixel correspondente na origem
+    for (let y = 0; y < newHeight; y++) {
+        for (let x = 0; x < newWidth; x++) {
+            // Coordenadas no espaço transformado
+            const worldX = x + minX;
+            const worldY = y + minY;
+
+            // Aplica transformação inversa
+            const srcX = invMatrix[0][0] * worldX + invMatrix[0][1] * worldY + invMatrix[0][2];
+            const srcY = invMatrix[1][0] * worldX + invMatrix[1][1] * worldY + invMatrix[1][2];
+
+            let pixelValue = 0;
+
+            if (useNearestNeighbor) {
+                // Interpolação Nearest Neighbor
+                const ix = Math.round(srcX);
+                const iy = Math.round(srcY);
+                pixelValue = currentImageData.getPixel(ix, iy);
+            } else {
+                // Interpolação Bilinear
+                pixelValue = bilinearInterpolation(currentImageData, srcX, srcY);
+            }
+
+            newImageData.setPixel(x, y, pixelValue);
+        }
+    }
+
+    currentImageData = newImageData;
+    renderImage(currentImageData, transformedCanvas, transformedCtx, transformedDimensionsDiv);
+}
+
+// INTERPOLAÇÃO BILINEAR
+function bilinearInterpolation(imageData, x, y) {
+    const x1 = Math.floor(x);
+    const x2 = x1 + 1;
+    const y1 = Math.floor(y);
+    const y2 = y1 + 1;
+
+    const Q11 = imageData.getPixel(x1, y1);
+    const Q21 = imageData.getPixel(x2, y1);
+    const Q12 = imageData.getPixel(x1, y2);
+    const Q22 = imageData.getPixel(x2, y2);
+
+    const dx = x - x1;
+    const dy = y - y1;
+
+    const R1 = Q11 * (1 - dx) + Q21 * dx;
+    const R2 = Q12 * (1 - dx) + Q22 * dx;
+
+    return Math.round(R1 * (1 - dy) + R2 * dy);
+}
+
+// INVERSÃO DE MATRIZ 3x3
+function invertMatrix(m) {
+    const det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
+        m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+        m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+
+    if (Math.abs(det) < 1e-10) {
+        console.error('Matriz não inversível');
+        return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+    }
+
+    const inv = [
+        [
+            (m[1][1] * m[2][2] - m[1][2] * m[2][1]) / det,
+            (m[0][2] * m[2][1] - m[0][1] * m[2][2]) / det,
+            (m[0][1] * m[1][2] - m[0][2] * m[1][1]) / det
+        ],
+        [
+            (m[1][2] * m[2][0] - m[1][0] * m[2][2]) / det,
+            (m[0][0] * m[2][2] - m[0][2] * m[2][0]) / det,
+            (m[0][2] * m[1][0] - m[0][0] * m[1][2]) / det
+        ],
+        [
+            (m[1][0] * m[2][1] - m[1][1] * m[2][0]) / det,
+            (m[0][1] * m[2][0] - m[0][0] * m[2][1]) / det,
+            (m[0][0] * m[1][1] - m[0][1] * m[1][0]) / det
+        ]
+    ];
+
+    return inv;
+}
+
+// ===============================
+// EVENTOS DOS BOTÕES DE TRANSFORMAÇÃO
+// ===============================
+
+// TRANSLAÇÃO
+translateBtn.addEventListener('click', () => {
+    const dx = parseFloat(document.getElementById('translateX').value) || 0;
+    const dy = parseFloat(document.getElementById('translateY').value) || 0;
+
+    const matrix = TransformMatrix.translation(dx, dy);
+    applyTransformation(matrix, true, true); // true = useNN, true = isTranslation
+
+    history.push(`Translação: Δx=${dx}, Δy=${dy}`);
+    updateHistory();
+    console.log(`Aplicada translação: (${dx}, ${dy})`);
+});
+
+// ESCALA
+scaleBtn.addEventListener('click', () => {
+    const sx = parseFloat(document.getElementById('scaleX').value) || 1;
+    const sy = parseFloat(document.getElementById('scaleY').value) || 1;
+    const useNN = document.getElementById('nearestNeighbor').checked;
+
+    // Escala em torno do centro da imagem
+    const cx = currentImageData.width / 2;
+    const cy = currentImageData.height / 2;
+
+    const t1 = TransformMatrix.translation(-cx, -cy);
+    const s = TransformMatrix.scale(sx, sy);
+    const t2 = TransformMatrix.translation(cx, cy);
+
+    const matrix = t2.multiply(s).multiply(t1);
+    applyTransformation(matrix, useNN);
+
+    history.push(`Escala: Sx=${sx}, Sy=${sy} (${useNN ? 'NN' : 'Bilinear'})`);
+    updateHistory();
+    console.log(`Aplicada escala: (${sx}, ${sy})`);
+});
+
+// ROTAÇÃO
+rotateBtn.addEventListener('click', () => {
+    const angle = parseFloat(document.getElementById('rotateAngle').value) || 0;
+    const angleRad = angle * Math.PI / 180;
+
+    let cx = parseFloat(document.getElementById('rotateCenterX').value);
+    let cy = parseFloat(document.getElementById('rotateCenterY').value);
+
+    // Se não especificado, usa centro da imagem
+    if (isNaN(cx)) cx = currentImageData.width / 2;
+    if (isNaN(cy)) cy = currentImageData.height / 2;
+
+    const t1 = TransformMatrix.translation(-cx, -cy);
+    const r = TransformMatrix.rotation(angleRad);
+    const t2 = TransformMatrix.translation(cx, cy);
+
+    const matrix = t2.multiply(r).multiply(t1);
+    applyTransformation(matrix, false); // Usa bilinear para rotação
+
+    history.push(`Rotação: ${angle}° em torno de (${cx.toFixed(1)}, ${cy.toFixed(1)})`);
+    updateHistory();
+    console.log(`Aplicada rotação: ${angle}° `);
+});
+
+// REFLEXÃO
+reflectBtn.addEventListener('click', () => {
+    const reflectX = document.getElementById('reflectX').checked;
+    const reflectY = document.getElementById('reflectY').checked;
+
+    if (!reflectX && !reflectY) {
+        alert('Selecione pelo menos uma direção de reflexão!');
+        return;
+    }
+
+    // Reflexão em torno do centro
+    const cx = currentImageData.width / 2;
+    const cy = currentImageData.height / 2;
+
+    const t1 = TransformMatrix.translation(-cx, -cy);
+    const ref = TransformMatrix.reflection(reflectX, reflectY);
+    const t2 = TransformMatrix.translation(cx, cy);
+
+    const matrix = t2.multiply(ref).multiply(t1);
+    applyTransformation(matrix);
+
+    const axis = [reflectX && 'X', reflectY && 'Y'].filter(Boolean).join(' e ');
+    history.push(`Reflexão em ${axis}`);
+    updateHistory();
+    console.log(`Aplicada reflexão em ${axis}`);
+});
+
+// CISALHAMENTO
+shearBtn.addEventListener('click', () => {
+    const shx = parseFloat(document.getElementById('shearX').value) || 0;
+    const shy = parseFloat(document.getElementById('shearY').value) || 0;
+
+    const matrix = TransformMatrix.shear(shx, shy);
+    applyTransformation(matrix);
+
+    history.push(`Cisalhamento: Shx=${shx}, Shy=${shy}`);
+    updateHistory();
+    console.log(`Aplicado cisalhamento: (${shx}, ${shy})`);
+});
+
+// ===============================
+// CONTROLES GERAIS
+// ===============================
+
+// RESETAR
+resetBtn.addEventListener('click', () => {
+    if (!originalImageData) {
+        alert('Nenhuma imagem carregada!');
+        return;
+    }
+
+    currentImageData = new ImageData2D(originalImageData.width, originalImageData.height);
+
+    for (let y = 0; y < originalImageData.height; y++) {
+        for (let x = 0; x < originalImageData.width; x++) {
+            currentImageData.setPixel(x, y, originalImageData.getPixel(x, y));
+        }
+    }
+
+    renderImage(currentImageData, transformedCanvas, transformedCtx, transformedDimensionsDiv);
+    history = [];
+    updateHistory();
+    console.log('Imagem resetada para original');
+});
+
+// LIMPAR
+clearBtn.addEventListener('click', () => {
+    originalImageData = null;
+    currentImageData = null;
+    originalWidth = 0;
+    originalHeight = 0;
+    history = [];
+
+    originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
+    transformedCtx.clearRect(0, 0, transformedCanvas.width, transformedCanvas.height);
+
+    originalCanvas.width = 0;
+    originalCanvas.height = 0;
+    transformedCanvas.width = 0;
+    transformedCanvas.height = 0;
+
+    imageInfoDiv.innerHTML = 'Nenhuma imagem carregada';
+    originalDimensionsDiv.textContent = '';
+    transformedDimensionsDiv.textContent = '';
+    updateHistory();
+
+    translateBtn.disabled = true;
+    scaleBtn.disabled = true;
+    rotateBtn.disabled = true;
+    reflectBtn.disabled = true;
+    shearBtn.disabled = true;
+
+    fileInput.value = '';
+    preloadedSelect.value = '';
+
+    console.log('Tudo limpo');
+});
+
+// ===============================
+// INICIALIZAÇÃO
+// ===============================
+document.addEventListener('DOMContentLoaded', () => {
+    translateBtn.disabled = true;
+    scaleBtn.disabled = true;
+    rotateBtn.disabled = true;
+    reflectBtn.disabled = true;
+    shearBtn.disabled = true;
+
+    console.log('Sistema de Processamento de Imagens inicializado');
+    console.log('Carregue uma imagem PGM para começar');
+});
