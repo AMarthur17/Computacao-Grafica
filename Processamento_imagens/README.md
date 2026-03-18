@@ -1,101 +1,48 @@
-# Processamento de Imagens - Filtros e Operações
+# Processamento de Imagens - Transformações Geométricas
 
 ## 📋 Descrição do Projeto
 
-Este projeto implementa **8 Filtros**, **Operações Aritméticas** e **Operadores Lógicos** para processamento de imagens em formato PGM, cumprindo os requisitos da **Aula 9**.
+Este projeto implementa transformações geométricas em imagens binárias (formato PGM), cumprindo os requisitos do **Item 4** do trabalho de Computação Gráfica.
 
-## 🎯 Funcionalidades Implementadas
+## 🎯 Requisitos Atendidos
 
-### 1️⃣ **8 Filtros**
+✅ **Translação** - Desloca a imagem em X e Y  
+✅ **Escala** - Redimensiona a imagem (aumenta/diminui)  
+✅ **Rotação** - Gira a imagem em torno de um ponto  
+✅ **Reflexão** - Espelha a imagem horizontal e/ou verticalmente  
+✅ **Cisalhamento** - Distorce a imagem (shear)
 
-- ✅ **Filtro de Mediana** - Remove ruído preservando bordas
-- ✅ **Filtro de Média** - Suavização por convolução
-- ✅ **Filtro Gaussiano** - Suavização gaussiana customizável
-- ✅ **Filtro Sobel** - Detecção de bordas com gradiente
-- ✅ **Filtro Laplaciano** - Detecção de mudanças abruptas
-- ✅ **Filtro Passa Alta** - Realce de detalhes
-- ✅ **Filtro de Realce** - Aumento de contraste
-- ✅ **Detecção de Bordas** - Identificação de contornos
+## 🚀 Funcionalidades
 
-### 2️⃣ **Operações Aritméticas entre Imagens**
+### Carregamento de Imagens
 
-- ✅ **Adição**: I1 + I2
-- ✅ **Subtração**: I1 - I2 (com valor absoluto)
-- ✅ **Multiplicação**: I1 × I2
-- ✅ **Divisão**: I1 ÷ I2 (com proteção contra divisão por zero)
+- **Upload manual**: Selecione qualquer arquivo `.pgm` do seu computador
 
-### 3️⃣ **Operadores Lógicos entre Imagens**
+### Transformações Disponíveis
 
-- ✅ **OR**: I1 | I2
-- ✅ **AND**: I1 & I2
-- ✅ **XOR**: I1 ^ I2
+#### 1. 🔄 Translação
 
-## 🖼️ Imagens de Teste
+Desloca a imagem no plano cartesiano.
 
-### Testadas com:
-- **lena.pgm** - Imagem padrão
-- **lenag.pgm** - Versão em tons de cinza (para filtro de média)
-- **lenasalp.pgm** - Versão com ruído Salt & Pepper (para filtro de mediana)
-- **Airplane.pgm** - Imagem alternativa
+- **Parâmetros**: Δx (deslocamento horizontal), Δy (deslocamento vertical)
+- **Efeito**: Move toda a imagem sem deformá-la
 
-## 🚀 Como Usar
+#### 2. 📏 Escala
 
-### 1. **Carregamento de Imagens**
-- Use o seletor na sidebar esquerda para escolher imagens pré-carregadas
-- Ou faça upload de arquivos PGM do seu computador
+Redimensiona a imagem proporcionalmente ou não.
 
-### 2. **Aplicar Filtros**
-- Selecione a **Imagem 1** e clique em um dos 8 botões de filtro
-- O resultado aparecerá no canvas central
+- **Parâmetros**: Sx (escala em X), Sy (escala em Y)
+- **Opções**: Nearest Neighbor (mais rápido) ou Bilinear (mais suave)
+- **Efeito**: Aumenta ou diminui o tamanho da imagem
 
-### 3. **Operações entre Imagens**
-- Carregue **Imagem 1** e **Imagem 2**
-- Clique em um botão de operação (Adição, Subtração, etc.)
-- O resultado será exibido
+#### 3. 🔁 Rotação
 
-### 4. **Operadores Lógicos**
-- Carregue **Imagem 1** e **Imagem 2**
-- Clique em OR, AND ou XOR
-- Veja a imagem binária resultado
+Gira a imagem em torno de um ponto.
 
-## ⚙️ Parâmetros Ajustáveis
+- **Parâmetros**: Ângulo (em graus), Centro X, Centro Y
+- **Efeito**: Rotaciona a imagem, ajustando automaticamente as dimensões
 
-- **Tamanho do Kernel**: 3x3, 5x5 ou 7x7 (para filtros convolucionais)
-- **Fator de Realce**: 0.5 a 3.0 (controla intensidade do realce)
-
-## 📊 Características Técnicas
-
-- **Parser PGM**: Suporta formatos P2 (ASCII) e P5 (binário)
-- **Processamento em Tempo Real**: Aplicação instantânea de filtros
-- **Interpolação**: Nearest Neighbor para eficiência
-- **Conversão Automática**: Normalização de valores entre 0-255
-- **Tratamento de Bordas**: Extrapolação zero para pixels fora dos limites
-
-## 🎨 Interface
-
-- **Layout em 3 Colunas**: Imagem 1, Imagem 2 e Resultado
-- **Tema Escuro**: Reduz fadiga visual
-- **Botões Coloridos**: Cada categoria tem cor diferente
-  - 🟢 Verde: Filtros
-  - 🟠 Laranja: Operações Aritméticas
-  - 🟣 Roxo: Operadores Lógicos
-
-## 📝 Notas de Implementação
-
-- Filtros aplicados apenas na Imagem 1
-- Operações requerem ambas as imagens
-- Imagens são redimensionadas para o menor tamanho comum em operações
-- Valores de pixel limitados automaticamente ao intervalo [0, 255]
-
-## 🏆 Requisitos Atendidos
-
-✅ Item 5 - Aula 9  
-✅ 8 Filtros implementados  
-✅ Operações aritméticas completas  
-✅ Operadores lógicos com 3 tipos  
-✅ Interface web interativa  
-✅ Suporte a imagens PGM  
-
+#### 4. 🪞 Reflexão
 
 Espelha a imagem nos eixos.
 
@@ -174,8 +121,7 @@ Processamento_imagens/
 1. **Abra o arquivo `index.html`** em um navegador moderno (Chrome, Firefox, Edge)
 
 2. **Carregue uma imagem**:
-   - Método 1: Clique em "Escolher arquivo" e selecione um `.pgm`
-   - Método 2: Selecione uma imagem pré-carregada no dropdown
+   - Clique em "Escolher arquivo" e selecione um `.pgm`
 
 3. **Aplique transformações**:
    - Ajuste os parâmetros na sidebar direita
