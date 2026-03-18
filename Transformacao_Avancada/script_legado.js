@@ -303,7 +303,7 @@ function updateMatrixDisplay() {
     const matrixInfo = document.getElementById("matrix-info");
     matrixInfo.innerHTML = `
         <p>Matriz Combinada (3x3)</p>
-        <code>Ver sequencia aplicada -></code>
+        <code>Ver sequência aplicada -></code>
     `;
 }
 
@@ -334,7 +334,7 @@ function updateClippingDisplay() {
 function updateSequenceDisplay() {
     const sequenceList = document.getElementById("sequence-list");
     if (transformationSequence.length === 0) {
-        sequenceList.innerHTML = "<em>Nenhuma transformacao na sequencia</em>";
+        sequenceList.innerHTML = "<em>Nenhuma transformação na sequência</em>";
     } else {
         let html = "";
         transformationSequence.forEach((t, i) => {
@@ -429,7 +429,7 @@ function addToSequence() {
 
 function applySequence() {
     if (transformationSequence.length === 0) {
-        alert("A sequencia esta vazia!");
+        alert("A sequência está vazia!");
         return;
     }
 

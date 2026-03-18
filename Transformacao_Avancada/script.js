@@ -765,7 +765,7 @@ function renderLineStatus(line, clippedLine) {
         <strong>Comprimento:</strong> ${line.length.toFixed(2)}<br>
         <strong>Diagonal da janela:</strong> ${line.diagonal.toFixed(2)}<br>
         <strong>Ponto médio:</strong> (${midpointX.toFixed(1)}, ${midpointY.toFixed(1)})<br>
-        <strong>Status:</strong> ${clippedLine.clipped ? "reta parcialmente recortada" : "reta totalmente visivel"}
+        <strong>Status:</strong> ${clippedLine.clipped ? "reta parcialmente recortada" : "reta totalmente visível"}
     `;
 }
 
