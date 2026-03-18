@@ -62,6 +62,41 @@
             </div>
 
             <button id="apply-transform-btn">Aplicar Transformação</button>
+            <button id="add-sequence-btn">Adicionar à Sequência</button>
+            <button id="apply-sequence-btn">Aplicar Sequência</button>
+            <button id="clear-sequence-btn">Limpar Sequência</button>
+        </div>
+
+        <div class="viewport-controls">
+            <h3>Mundo -> Viewport + Recorte Poligonal</h3>
+            <hr>
+            <label>Janela do Mundo Projetada</label>
+            <div class="input-group">
+                <input type="number" id="world-xmin" value="-260" step="10"> Xmin
+                <input type="number" id="world-xmax" value="260" step="10"> Xmax
+            </div>
+            <div class="input-group">
+                <input type="number" id="world-ymin" value="-260" step="10"> Ymin
+                <input type="number" id="world-ymax" value="260" step="10"> Ymax
+            </div>
+
+            <label>Viewport (canvas da direita)</label>
+            <div class="input-group">
+                <input type="number" id="vp-xmin" value="70" step="5"> Xmin
+                <input type="number" id="vp-xmax" value="330" step="5"> Xmax
+            </div>
+            <div class="input-group">
+                <input type="number" id="vp-ymin" value="70" step="5"> Ymin
+                <input type="number" id="vp-ymax" value="330" step="5"> Ymax
+            </div>
+
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="enable-viewport" checked> Habilitar mapeamento para viewport</label>
+                <label><input type="checkbox" id="enable-poly-clipping" checked> Recorte poligonal
+                    (Sutherland-Hodgman)</label>
+            </div>
+            <button id="fit-world-btn">Ajustar Janela do Mundo ao Objeto</button>
+            <button id="update-pipeline-btn">Atualizar Pipeline</button>
         </div>
 
         <div class="camera-controls">
@@ -84,9 +119,10 @@
 
     <div class="main">
         <canvas id="canvas" width="700" height="700"></canvas>
+        <canvas id="viewport-canvas" width="400" height="400"></canvas>
         <div class="projection-info">
             <h3>Projeção Paralela Isométrica</h3>
-            <p>Os eixos X, Y e Z estão espaçados em 120°</p>
+            <p>Fluxo formal do Item 3: projeção isométrica -> mapeamento mundo para viewport -> recorte poligonal</p>
         </div>
         <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus, Vítor Raimundo</p>
         <p id="credits2">Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
@@ -123,6 +159,18 @@
                 <p><strong>Vértices:</strong> <span id="vertex-count">-</span></p>
                 <p><strong>Arestas:</strong> <span id="edge-count">-</span></p>
             </div>
+        </div>
+
+        <div class="object-stats">
+            <h3>Sequência 3D</h3>
+            <hr>
+            <div id="sequence-info"><em>Nenhuma transformação na sequência</em></div>
+        </div>
+
+        <div class="object-stats">
+            <h3>Recorte Poligonal</h3>
+            <hr>
+            <div id="clip-info"><em>Aguardando objeto</em></div>
         </div>
     </div>
 

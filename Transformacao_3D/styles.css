@@ -40,10 +40,12 @@ h3 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     background: #181818;
     position: relative;
-    padding: 20px;
+    padding: 18px;
+    gap: 12px;
+    overflow-y: auto;
 }
 
 canvas {
@@ -51,9 +53,17 @@ canvas {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
     background-color: #f5f5f5;
     display: block;
-    margin-bottom: 15px;
+    margin-bottom: 0;
+    width: min(64vw, 680px);
     max-width: 100%;
     height: auto;
+}
+
+#viewport-canvas {
+    width: min(46vw, 420px);
+    max-width: 100%;
+    border: 1px solid #2f6f8a;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
 }
 
 .projection-info {
@@ -61,9 +71,8 @@ canvas {
     padding: 15px;
     border-radius: 8px;
     text-align: center;
-    margin-bottom: 15px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-    max-width: 600px;
+    max-width: min(64vw, 680px);
 }
 
 .projection-info h3 {
@@ -269,4 +278,23 @@ button:active {
     text-align: center;
     font-weight: bold;
     color: #4CAF50;
+}
+
+#sequence-info,
+#clip-info {
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #ccc;
+}
+
+#sequence-info .seq-row {
+    padding: 4px 0;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+#sequence-info .seq-row:last-child {
+    border-bottom: none;
 }
