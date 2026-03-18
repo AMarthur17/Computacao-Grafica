@@ -16,12 +16,12 @@ const originalDiv = document.getElementById("original-vertices");
 const matrixDiv = document.getElementById("matrix-info");
 const transformedDiv = document.getElementById("transformed-vertices");
 
-// --- Adiciona uma div para mostrar o quadrante ---
-const quadrantInfo = document.createElement("div");
-quadrantInfo.style.marginTop = "10px";
-quadrantInfo.style.fontWeight = "bold";
-quadrantInfo.style.color = "#4CAF50";
-document.getElementById("left-bar").appendChild(quadrantInfo);
+// --- Adiciona uma div para mostrar o octante ---
+const octantInfo = document.createElement("div");
+octantInfo.style.marginTop = "10px";
+octantInfo.style.fontWeight = "bold";
+octantInfo.style.color = "#4CAF50";
+document.getElementById("left-bar").appendChild(octantInfo);
 
 // --- Matrizes ---
 function createTranslationMatrix(tx, ty) {
@@ -85,7 +85,7 @@ function draw() {
     ctx.stroke();
 
     ctx.restore();
-    detectQuadrant();
+    detectOctant();
 }
 
 // --- Desenhar Grid e Eixos ---
@@ -125,17 +125,19 @@ function drawGrid() {
     ctx.restore();
 }
 
-// --- Detectar Quadrante ---
-function detectQuadrant() {
+// --- Detectar Octante ---
+function detectOctant() {
     const cx = currentShapeVertices.reduce((acc, v) => acc + v.x, 0) / currentShapeVertices.length;
     const cy = currentShapeVertices.reduce((acc, v) => acc + v.y, 0) / currentShapeVertices.length;
+    const absX = Math.abs(cx);
+    const absY = Math.abs(cy);
 
-    let text = "⚪ Sobre os eixos";
-    if (cx > 0 && cy > 0) text = "🟩 Quadrante I (x>0, y>0)";
-    else if (cx < 0 && cy > 0) text = "🟦 Quadrante II (x<0, y>0)";
-    else if (cx < 0 && cy < 0) text = "🟨 Quadrante III (x<0, y<0)";
-    else if (cx > 0 && cy < 0) text = "🟥 Quadrante IV (x>0, y<0)";
-    quadrantInfo.textContent = "Posição da forma: " + text;
+    let text = "Sobre os eixos";
+    if (cx > 0 && cy > 0) text = absX >= absY ? "1o octante (0° a 45°)" : "2o octante (45° a 90°)";
+    else if (cx < 0 && cy > 0) text = absX < absY ? "3o octante (90° a 135°)" : "4o octante (135° a 180°)";
+    else if (cx < 0 && cy < 0) text = absX >= absY ? "5o octante (180° a 225°)" : "6o octante (225° a 270°)";
+    else if (cx > 0 && cy < 0) text = absX < absY ? "7o octante (270° a 315°)" : "8o octante (315° a 360°)";
+    octantInfo.textContent = "Posicao da forma: " + text;
 }
 
 // --- Mostrar Info ---
@@ -149,7 +151,7 @@ function showInfo(matrix) {
     originalDiv.textContent = formatVertices(originalShapeVertices);
     matrixDiv.textContent = matrix.map(row => row.map(v => v.toFixed(2)).join("  ")).join("\n");
     transformedDiv.textContent = formatVertices(currentShapeVertices);
-    detectQuadrant();
+    detectOctant();
 }
 
 

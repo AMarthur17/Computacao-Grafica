@@ -2,7 +2,7 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const liveCoords = document.getElementById("live-coords");
 const clickedCoords = document.getElementById("clicked-coords");
-const quadrantInfo = document.getElementById("quadrant-info");
+const octantInfo = document.getElementById("quadrant-info");
 
 let Xmax = 255;
 let Xmin = -255;
@@ -42,14 +42,19 @@ function worldToDevice(wx, wy) {
     };
 }
 
-function getQuadrant(wx, wy) {
-    if (wx > 0 && wy > 0) return "I";
-    if (wx < 0 && wy > 0) return "II";
-    if (wx < 0 && wy < 0) return "III";
-    if (wx > 0 && wy < 0) return "IV";
+function getOctant(wx, wy) {
+    if (wx === 0 && wy === 0) return "Na origem";
     if (wx === 0 && wy !== 0) return "Sobre o eixo Y";
     if (wy === 0 && wx !== 0) return "Sobre o eixo X";
-    return "Na origem";
+
+    const absX = Math.abs(wx);
+    const absY = Math.abs(wy);
+
+    if (wx > 0 && wy > 0) return absX >= absY ? "1" : "2";
+    if (wx < 0 && wy > 0) return absX < absY ? "3" : "4";
+    if (wx < 0 && wy < 0) return absX >= absY ? "5" : "6";
+    if (wx > 0 && wy < 0) return absX < absY ? "7" : "8";
+    return "Indefinido";
 }
 
 function drawAxes() {
@@ -173,7 +178,7 @@ function updateCircleInfo() {
         <strong>Centro:</strong> (X: ${c.cx.toFixed(2)}, Y: ${c.cy.toFixed(2)})<br>
         <strong>Raio:</strong> ${c.r}<br>
         <strong>Tipo:</strong> ${c.method}<br>
-        <strong>Quadrante:</strong> ${getQuadrant(c.cx, c.cy)}<br><br>
+        <strong>Octante:</strong> ${getOctant(c.cx, c.cy)}<br><br>
         <strong>Coordenadas:</strong><br>
         <table border="1" cellpadding="4" cellspacing="0" style="border-collapse: collapse; font-size: 14px; width: 100%;">
             <thead>
@@ -249,7 +254,7 @@ canvas.addEventListener("mousemove", (event) => {
     ctx.fillRect(px, py, 1, 1);
 
     liveCoords.innerHTML = `<strong>Coordenadas:</strong> X: (${wx.toFixed(2)}), Y: (${wy.toFixed(2)})`;
-    quadrantInfo.innerHTML = `<strong>Quadrante:</strong> ${getQuadrant(wx, wy)}`;
+    octantInfo.innerHTML = `<strong>Octante:</strong> ${getOctant(wx, wy)}`;
 });
 
 const clearCirclesBtn = document.getElementById("clear-circles-btn");

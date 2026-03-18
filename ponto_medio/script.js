@@ -19,9 +19,9 @@ canvas.width = 500;
 canvas.height = 500;
 
 // ===============================
-// Desenha as linhas dos quadrantes (eixos X e Y)
+// Desenha os eixos do plano cartesiano
 // ===============================
-function desenharQuadrantes() {
+function desenharEixosCartesianos() {
     const largura = canvas.width;
     const altura = canvas.height;
 
@@ -56,7 +56,7 @@ function setPixel(x, y) {
 // ===============================
 function drawLines() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    desenharQuadrantes();
+    desenharEixosCartesianos();
     scrollContainer.innerHTML = "";
     lines.forEach(line => {
         if (line.algorithm === "dda") {
@@ -68,16 +68,16 @@ function drawLines() {
 }
 
 // ===============================
-// Evento para exibir as coordenadas do mouse e quadrante
+// Evento para exibir as coordenadas do mouse e octante
 // ===============================
 canvas.addEventListener("mousemove", (event) => {
     const rect = canvas.getBoundingClientRect();
-    const x = Math.round(event.clientX - rect.left - canvas.width / 2); 
+    const x = Math.round(event.clientX - rect.left - canvas.width / 2);
     const y = Math.round(canvas.height / 2 - (event.clientY - rect.top));
 
     liveCoords.innerHTML = ` 
         <strong>Coordenada:</strong> (${x}, ${y})<br>
-        <strong>Quadrante:</strong> ${atualizarQuadrante(x,y)}
+        <strong>Octante:</strong> ${atualizarOctante(x, y)}
     `;
 });
 
@@ -89,7 +89,7 @@ let x1, y1;
 
 canvas.addEventListener("click", (event) => {
     const rect = canvas.getBoundingClientRect();
-    const x = Math.round(event.clientX - rect.left - canvas.width / 2); 
+    const x = Math.round(event.clientX - rect.left - canvas.width / 2);
     const y = Math.round(canvas.height / 2 - (event.clientY - rect.top));
 
     if (clickCount === 0) {
@@ -116,7 +116,7 @@ canvas.addEventListener("click", (event) => {
 clearBtn.addEventListener("click", () => {
     lines = [];
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    desenharQuadrantes();
+    desenharEixosCartesianos();
     drawLines();
     scrollContainer.innerHTML = "";
 
@@ -179,19 +179,23 @@ function atualizarPainelDireito() {
 // ===============================
 // Inicializa o canvas com o plano cartesiano
 // ===============================
-desenharQuadrantes();
+desenharEixosCartesianos();
 
 // ===============================
-// Função para identificar o quadrante do ponto
+// Função para identificar o octante do ponto
 // ===============================
-function atualizarQuadrante(x, y) {
-    if (x > 0 && y > 0) return '1';
-    else if (x < 0 && y > 0) return '2';
-    else if (x < 0 && y < 0) return '3';
-    else if (x > 0 && y < 0) return '4';
-    else if (x === 0 && y !== 0) return 'Eixo Y';
-    else if (y === 0 && x !== 0) return 'Eixo X';
-    else return 'Origem';
+function atualizarOctante(x, y) {
+    if (x === 0 && y === 0) return 'Origem';
+    if (x === 0 && y !== 0) return 'Eixo Y';
+    if (y === 0 && x !== 0) return 'Eixo X';
+
+    const absX = Math.abs(x);
+    const absY = Math.abs(y);
+
+    if (x > 0 && y > 0) return absX >= absY ? '1o octante' : '2o octante';
+    if (x < 0 && y > 0) return absX < absY ? '3o octante' : '4o octante';
+    if (x < 0 && y < 0) return absX >= absY ? '5o octante' : '6o octante';
+    return absX < absY ? '7o octante' : '8o octante';
 }
 
 // ===============================
@@ -315,4 +319,4 @@ function mostrarOitante(x1, y1, x2, y2) {
     scrollContainer.appendChild(oitanteDiv);
 }
 
-   
+

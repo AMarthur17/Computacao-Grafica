@@ -2,7 +2,7 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const liveCoords = document.getElementById("live-coords");
 const clickedCoords = document.getElementById("clicked-coords");
-const quadrantInfo = document.getElementById("quadrant-info");
+const octantInfo = document.getElementById("quadrant-info");
 
 let Xmax = 255;
 let Xmin = -255;
@@ -35,13 +35,18 @@ function worldToDevice(wx, wy) {
     };
 }
 
-function getQuadrant(wx, wy) {
-    if (wx > 0 && wy > 0) return "Quadrante I";
-    if (wx < 0 && wy > 0) return "Quadrante II";
-    if (wx < 0 && wy < 0) return "Quadrante III";
-    if (wx > 0 && wy < 0) return "Quadrante IV";
+function getOctant(wx, wy) {
+    if (wx === 0 && wy === 0) return "Na origem";
     if (wx === 0 && wy !== 0) return "Sobre o eixo Y";
     if (wy === 0 && wx !== 0) return "Sobre o eixo X";
+
+    const absX = Math.abs(wx);
+    const absY = Math.abs(wy);
+
+    if (wx > 0 && wy > 0) return absX >= absY ? "1o octante" : "2o octante";
+    if (wx < 0 && wy > 0) return absX < absY ? "3o octante" : "4o octante";
+    if (wx < 0 && wy < 0) return absX >= absY ? "5o octante" : "6o octante";
+    if (wx > 0 && wy < 0) return absX < absY ? "7o octante" : "8o octante";
     return "Na origem";
 }
 
@@ -183,7 +188,7 @@ function updateEllipseInfo() {
         <strong>Centro:</strong> (${e.cx.toFixed(1)}, ${e.cy.toFixed(1)})<br>
         <strong>Semi-eixo a:</strong> ${e.rx}<br>
         <strong>Semi-eixo b:</strong> ${e.ry}<br>
-        <strong>Quadrante:</strong> ${getQuadrant(e.cx, e.cy)}<br>
+        <strong>Octante:</strong> ${getOctant(e.cx, e.cy)}<br>
         <strong>Total de pontos:</strong> ${e.points.length}<br><br>
         <strong>Primeiros pontos (amostra):</strong><br>
         <table border="1" cellpadding="4" cellspacing="0" style="border-collapse: collapse; width: 100%; font-size: 12px;">
@@ -200,7 +205,7 @@ function updateEllipseInfo() {
         </table>
     `;
     clickedCoords.appendChild(div);
-    quadrantInfo.textContent = getQuadrant(e.cx, e.cy);
+    octantInfo.textContent = getOctant(e.cx, e.cy);
 }
 
 // ===============================
@@ -246,7 +251,7 @@ clearEllipsesBtn.addEventListener("click", () => {
     ellipses = [];
     drawAll();
     clickedCoords.innerHTML = "<em>Clique no canvas ou entre as informações para desenhar uma elipse.</em>";
-    quadrantInfo.textContent = "";
+    octantInfo.textContent = "";
 });
 
 // Movimento do mouse sobre o canvas
@@ -259,7 +264,7 @@ canvas.addEventListener("mousemove", (event) => {
     liveCoords.innerHTML = `
         <strong>Device:</strong> (${Math.round(dx)}, ${Math.round(dy)})<br>
         <strong>World:</strong> (${wx.toFixed(2)}, ${wy.toFixed(2)})<br>
-        <strong>Posição:</strong> ${getQuadrant(wx, wy)}
+        <strong>Posicao:</strong> ${getOctant(wx, wy)}
     `;
 });
 
