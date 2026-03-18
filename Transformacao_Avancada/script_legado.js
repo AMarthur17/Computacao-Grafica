@@ -140,6 +140,120 @@ function cohenSutherlandClip(x1, y1, x2, y2, xmin, xmax, ymin, ymax) {
     return { accept: false };
 }
 
+// Recorte poligonal Sutherland-Hodgman para alinhar o fluxo da viewport 2D
+// ao modelo de referencia: mapear para viewport e recortar o poligono final.
+function clipPolygonSutherlandHodgman(vertices, bounds) {
+    const edgesOrder = ["left", "right", "bottom", "top"];
+    let output = vertices.map(v => ({ x: v.x, y: v.y }));
+
+    function inside(point, edge) {
+        if (edge === "left") return point.x >= bounds.xmin;
+        if (edge === "right") return point.x <= bounds.xmax;
+        if (edge === "bottom") return point.y >= bounds.ymin;
+        return point.y <= bounds.ymax;
+    }
+
+    function intersect(start, end, edge) {
+        let x;
+        let y;
+
+        if (edge === "left" || edge === "right") {
+            x = edge === "left" ? bounds.xmin : bounds.xmax;
+            const t = (x - start.x) / ((end.x - start.x) || 1e-9);
+            y = start.y + t * (end.y - start.y);
+        } else {
+            y = edge === "bottom" ? bounds.ymin : bounds.ymax;
+            const t = (y - start.y) / ((end.y - start.y) || 1e-9);
+            x = start.x + t * (end.x - start.x);
+        }
+
+        return { x, y };
+    }
+
+    for (const edge of edgesOrder) {
+        const input = output;
+        output = [];
+
+        if (input.length === 0) {
+            break;
+        }
+
+        let previous = input[input.length - 1];
+        for (const current of input) {
+            const currentInside = inside(current, edge);
+            const previousInside = inside(previous, edge);
+
+            if (currentInside) {
+                if (!previousInside) {
+                    output.push(intersect(previous, current, edge));
+                }
+                output.push(current);
+            } else if (previousInside) {
+                output.push(intersect(previous, current, edge));
+            }
+
+            previous = current;
+        }
+    }
+
+    return output.length >= 3 ? output : [];
+}
+
+function polygonChanged(original, clipped, epsilon = 0.2) {
+    if (original.length !== clipped.length) return true;
+    for (let i = 0; i < original.length; i++) {
+        if (Math.abs(original[i].x - clipped[i].x) > epsilon || Math.abs(original[i].y - clipped[i].y) > epsilon) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function drawViewportPolygonClip(mappedVertices, viewportBounds) {
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Original mapeado (sem recorte) em cinza para comparacao visual.
+    ctx.save();
+    ctx.strokeStyle = "#c8c8c8";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(mappedVertices[0].x, mappedVertices[0].y);
+    for (let i = 1; i < mappedVertices.length; i++) {
+        ctx.lineTo(mappedVertices[i].x, mappedVertices[i].y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+
+    const clipped = clipPolygonSutherlandHodgman(mappedVertices, viewportBounds);
+    if (clipped.length < 3) {
+        clippingStats = { accepted: 0, clipped: 0, rejected: 1 };
+        return;
+    }
+
+    ctx.save();
+    ctx.fillStyle = "rgba(33, 150, 243, 0.18)";
+    ctx.strokeStyle = "#2196F3";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(clipped[0].x, clipped[0].y);
+    for (let i = 1; i < clipped.length; i++) {
+        ctx.lineTo(clipped[i].x, clipped[i].y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    clippingStats = {
+        accepted: polygonChanged(mappedVertices, clipped) ? 0 : 1,
+        clipped: polygonChanged(mappedVertices, clipped) ? 1 : 0,
+        rejected: 0
+    };
+}
+
 function draw() {
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -187,7 +301,11 @@ function draw() {
             worldToViewport(v.x, v.y, worldBounds, viewportBounds)
         );
 
-        drawShape(mappedVertices, clippingEnabled, viewportBounds, false);
+        if (clippingEnabled) {
+            drawViewportPolygonClip(mappedVertices, viewportBounds);
+        } else {
+            drawShape(mappedVertices, false, viewportBounds, false);
+        }
     } else {
         drawShape(currentVertices, false, null, true);
     }

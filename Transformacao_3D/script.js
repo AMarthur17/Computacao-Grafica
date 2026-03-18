@@ -453,6 +453,66 @@ function polygonChanged(original, clipped, epsilon = 0.2) {
     return false;
 }
 
+function lineOutCode(x, y, bounds) {
+    let code = 0;
+    if (x < bounds.xmin) code |= 1;
+    else if (x > bounds.xmax) code |= 2;
+    if (y < bounds.ymin) code |= 4;
+    else if (y > bounds.ymax) code |= 8;
+    return code;
+}
+
+function clipLineCohenSutherland(x1, y1, x2, y2, bounds) {
+    let outCode1 = lineOutCode(x1, y1, bounds);
+    let outCode2 = lineOutCode(x2, y2, bounds);
+
+    let accepted = false;
+    let clipped = false;
+
+    while (true) {
+        if (!(outCode1 | outCode2)) {
+            accepted = true;
+            break;
+        }
+
+        if (outCode1 & outCode2) {
+            break;
+        }
+
+        let x;
+        let y;
+        const outCodeOut = outCode1 ? outCode1 : outCode2;
+
+        if (outCodeOut & 8) {
+            x = x1 + (x2 - x1) * (bounds.ymax - y1) / ((y2 - y1) || 1e-9);
+            y = bounds.ymax;
+        } else if (outCodeOut & 4) {
+            x = x1 + (x2 - x1) * (bounds.ymin - y1) / ((y2 - y1) || 1e-9);
+            y = bounds.ymin;
+        } else if (outCodeOut & 2) {
+            y = y1 + (y2 - y1) * (bounds.xmax - x1) / ((x2 - x1) || 1e-9);
+            x = bounds.xmax;
+        } else {
+            y = y1 + (y2 - y1) * (bounds.xmin - x1) / ((x2 - x1) || 1e-9);
+            x = bounds.xmin;
+        }
+
+        clipped = true;
+
+        if (outCodeOut === outCode1) {
+            x1 = x;
+            y1 = y;
+            outCode1 = lineOutCode(x1, y1, bounds);
+        } else {
+            x2 = x;
+            y2 = y;
+            outCode2 = lineOutCode(x2, y2, bounds);
+        }
+    }
+
+    return { accepted, clipped, x1, y1, x2, y2 };
+}
+
 // ===============================
 // Pipeline: projecao -> mundo/viewport -> recorte
 // ===============================
@@ -540,39 +600,55 @@ function drawViewportScene(projectedWorldPoints) {
 
     const mappedVertices = projectedWorldPoints.map(point => worldToViewport(point, worldBounds, viewportBounds));
 
-    let visibleFaces = 0;
-    let rejectedFaces = 0;
-    let clippedFaces = 0;
+    // Mostra as arestas mapeadas sem recorte em tracejado, como referencia visual.
+    vpCtx.save();
+    vpCtx.strokeStyle = "#aaaaaa";
+    vpCtx.lineWidth = 1;
+    vpCtx.setLineDash([4, 3]);
+    edges.forEach(edge => {
+        const p1 = mappedVertices[edge[0]];
+        const p2 = mappedVertices[edge[1]];
+        drawLineDDA(vpCtx, p1.x, p1.y, p2.x, p2.y, "#aaaaaa");
+    });
+    vpCtx.restore();
 
-    faces.forEach((face, faceIndex) => {
-        const originalPolygon = face.map(index => mappedVertices[index]);
-        let finalPolygon = originalPolygon;
+    if (!clippingEnabled) {
+        clipInfo.innerHTML = `
+            <div><strong>Arestas totais:</strong> ${edges.length}</div>
+            <div><strong>Arestas visiveis:</strong> ${edges.length}</div>
+            <div><strong>Recorte:</strong> desabilitado</div>
+        `;
+        return;
+    }
 
-        if (clippingEnabled) {
-            // Recorte poligonal acontece apos o mapeamento mundo -> viewport.
-            finalPolygon = clipPolygonSutherlandHodgman(originalPolygon, viewportBounds);
-        }
+    let acceptedEdges = 0;
+    let clippedEdges = 0;
+    let rejectedEdges = 0;
 
-        if (!finalPolygon || finalPolygon.length < 3) {
-            rejectedFaces++;
+    edges.forEach(edge => {
+        const p1 = mappedVertices[edge[0]];
+        const p2 = mappedVertices[edge[1]];
+        const result = clipLineCohenSutherland(p1.x, p1.y, p2.x, p2.y, viewportBounds);
+
+        if (!result.accepted) {
+            rejectedEdges++;
             return;
         }
 
-        visibleFaces++;
-        if (clippingEnabled && polygonChanged(originalPolygon, finalPolygon)) {
-            clippedFaces++;
+        acceptedEdges++;
+        if (result.clipped) {
+            clippedEdges++;
         }
 
-        const hue = (faceIndex * 50) % 360;
-        drawPolygonOnViewport(finalPolygon, `hsla(${hue}, 70%, 55%, 0.32)`, `hsl(${hue}, 65%, 35%)`);
+        drawLineDDA(vpCtx, result.x1, result.y1, result.x2, result.y2, "#111");
     });
 
     clipInfo.innerHTML = `
-        <div><strong>Faces totais:</strong> ${faces.length}</div>
-        <div><strong>Faces visiveis:</strong> ${visibleFaces}</div>
-        <div><strong>Faces recortadas:</strong> ${clippedFaces}</div>
-        <div><strong>Faces rejeitadas:</strong> ${rejectedFaces}</div>
-        <div><strong>Algoritmo:</strong> Sutherland-Hodgman</div>
+        <div><strong>Arestas totais:</strong> ${edges.length}</div>
+        <div><strong>Arestas visiveis:</strong> ${acceptedEdges}</div>
+        <div><strong>Arestas recortadas:</strong> ${clippedEdges}</div>
+        <div><strong>Arestas rejeitadas:</strong> ${rejectedEdges}</div>
+        <div><strong>Algoritmo:</strong> Cohen-Sutherland</div>
     `;
 }
 
