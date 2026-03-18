@@ -14,6 +14,19 @@ const toggleAnimationBtn = document.getElementById("toggle-animation-btn");
 // Tolerancia numerica para comparar pontos e evitar problemas de ponto flutuante.
 const EPSILON = 1e-6;
 
+const COLORS = {
+    background: "#fdfdf7",
+    grid: "#e6e0d2",
+    axes: "#adb5bd",
+    clipWindow: "#2f95ea",
+    polygonOriginalStroke: "#264653",
+    polygonOriginalFill: "rgba(38, 70, 83, 0.10)",
+    polygonClippedStroke: "#2a9d8f",
+    polygonClippedFill: "rgba(42, 157, 143, 0.28)",
+    lineOriginal: "#b56576",
+    lineClipped: "#d62828"
+};
+
 // Formas simples usadas na demonstracao de recorte de poligonos.
 const shapes = {
     triangle: [
@@ -203,12 +216,12 @@ function pointInPolygon(point, polygon) {
 // Desenha uma grade cartesiana para facilitar a visualizacao do recorte.
 function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#fdfdf7";
+    ctx.fillStyle = COLORS.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.strokeStyle = "#e6e0d2";
+    ctx.strokeStyle = COLORS.grid;
     ctx.lineWidth = 1;
 
     for (let x = -canvas.width / 2; x <= canvas.width / 2; x += 40) {
@@ -225,7 +238,7 @@ function drawGrid() {
         ctx.stroke();
     }
 
-    ctx.strokeStyle = "#adb5bd";
+    ctx.strokeStyle = COLORS.axes;
     ctx.lineWidth = 2;
 
     ctx.beginPath();
@@ -249,7 +262,7 @@ function drawClipWindow(bounds) {
     ctx.save();
     ctx.setLineDash([10, 7]);
     ctx.lineWidth = 3;
-    ctx.strokeStyle = "#ffb703";
+    ctx.strokeStyle = COLORS.clipWindow;
     ctx.strokeRect(topLeft.x, topLeft.y, width, height);
     ctx.restore();
 }
@@ -859,23 +872,23 @@ function drawScene() {
     drawClipWindow(bounds);
 
     drawPolygon(currentVertices, {
-        strokeStyle: "#264653",
+        strokeStyle: COLORS.polygonOriginalStroke,
         lineWidth: 2,
-        fillStyle: "rgba(38, 70, 83, 0.10)"
+        fillStyle: COLORS.polygonOriginalFill
     });
 
     clippedPolygons.forEach((polygon) => {
         drawPolygon(polygon, {
-            strokeStyle: "#2a9d8f",
+            strokeStyle: COLORS.polygonClippedStroke,
             lineWidth: 3,
-            fillStyle: "rgba(42, 157, 143, 0.28)"
+            fillStyle: COLORS.polygonClippedFill
         });
     });
 
     // A reta original e desenhada primeiro; a parte visivel aparece por cima.
-    drawLineSegment(line, "#b56576", 2);
+    drawLineSegment(line, COLORS.lineOriginal, 2);
     if (clippedLine.accepted) {
-        drawLineSegment(clippedLine, "#d62828", 4);
+        drawLineSegment(clippedLine, COLORS.lineClipped, 4);
     }
 
     updateInfoPanels(bounds, line, clippedLine);
@@ -884,7 +897,7 @@ function drawScene() {
 function animationLoop() {
     if (animationState.active) {
         // Angulo negativo produz rotacao no sentido horario.
-        const step = parseFloat(lineSpeedInput.value) || 2;
+        const step = parseFloat(lineSpeedInput.value) || 0.5;
         animationState.angleDeg -= step;
         drawScene();
     }

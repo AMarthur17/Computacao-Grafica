@@ -55,12 +55,13 @@ function setPixel(x, y) {
 // Função para desenhar todas as retas armazenadas
 // ===============================
 function drawLines() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    desenharQuadrantes();
     scrollContainer.innerHTML = "";
     lines.forEach(line => {
-        const selectedAlgorithm = algorithmSelect.value;
-        if (selectedAlgorithm === "dda") {
+        if (line.algorithm === "dda") {
             dda(line.x1, line.y1, line.x2, line.y2);
-        } else if (selectedAlgorithm === "ponto-medio") {
+        } else if (line.algorithm === "ponto-medio") {
             pontoMedio(line.x1, line.y1, line.x2, line.y2);
         }
     });
@@ -99,7 +100,7 @@ canvas.addEventListener("click", (event) => {
         document.getElementById("x1").value = x1;
         document.getElementById("y1").value = y1;
     } else if (clickCount === 1) {
-        lines.push({ x1, y1, x2: x, y2: y });
+        lines.push({ x1, y1, x2: x, y2: y, algorithm: algorithmSelect.value });
         clickCount = 0;
         drawLines();
         atualizarPainelDireito();
@@ -131,17 +132,7 @@ clearBtn.addEventListener("click", () => {
 // Evento para trocar o algoritmo de desenho de reta
 // ===============================
 algorithmSelect.addEventListener("change", () => {
-    lines = [];
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    desenharQuadrantes();
     drawLines();
-
-    document.getElementById("no-line-message").style.display = "block";
-    document.getElementById("clicked-coords").style.display = "none";
-    document.getElementById("x1").value = '';
-    document.getElementById("y1").value = '';
-    document.getElementById("x2").value = '';
-    document.getElementById("y2").value = '';
 });
 
 // ===============================
@@ -153,7 +144,18 @@ drawLineBtn.addEventListener("click", () => {
     const x2Value = parseInt(document.getElementById("x2").value);
     const y2Value = parseInt(document.getElementById("y2").value);
 
-    lines.push({ x1: x1Value, y1: y1Value, x2: x2Value, y2: y2Value });
+    if ([x1Value, y1Value, x2Value, y2Value].some(Number.isNaN)) {
+        alert("Preencha coordenadas inteiras válidas para desenhar a reta.");
+        return;
+    }
+
+    lines.push({
+        x1: x1Value,
+        y1: y1Value,
+        x2: x2Value,
+        y2: y2Value,
+        algorithm: algorithmSelect.value
+    });
     drawLines();
     atualizarPainelDireito();
 });

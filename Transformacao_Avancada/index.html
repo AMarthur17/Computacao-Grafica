@@ -1,22 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recorte 2D - Item 2 (separado do Item 3)</title>
+    <title>Item 2 - Recorte 2D</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
     <aside class="sidebar" id="left-bar">
-        <section class="panel">
-            <h3>Modulos da Pasta</h3>
-            <hr>
-            <a class="nav-link active-link" href="index.html">Item 2 - Recorte e animação</a>
-            <a class="nav-link" href="transformacoes_legado.html">Item 3 - Transformações avançadas (sua parte)</a>
-            <p class="helper-text">Obs.: o Item 3 está em arquivo separado apenas por organização da equipe.</p>
-        </section>
         <section class="panel">
             <h3>Polígono Base</h3>
             <hr>
@@ -92,12 +83,11 @@
             <h3>Reta Animada</h3>
             <hr>
             <p class="helper-text">
-                A reta possui comprimento maior que a diagonal da janela e gira no sentido horário ao redor do centro da
-                janela.
+                A reta possui comprimento maior que a diagonal da janela e gira no sentido horário ao redor do centro da janela.
             </p>
             <label for="line-speed">Velocidade angular (graus por quadro)</label>
             <div class="input-row single">
-                <input type="number" id="line-speed" value="2" step="0.5" min="0.5">
+                <input type="number" id="line-speed" value="0.5" step="0.1" min="0.1">
             </div>
             <div class="button-row">
                 <button id="toggle-animation-btn">Pausar animação</button>
@@ -125,8 +115,8 @@
             <div><span class="legend-swatch source-line"></span> Reta original</div>
             <div><span class="legend-swatch clipped-line"></span> Reta recortada</div>
         </div>
-        <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus, Vitor Raimundo</p>
-        <p id="credits2">Computacao Gráfica - Prof. Robson Pequeno de Sousa</p>
+        <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus e Vitor Raimundo</p>
+        <p id="credits2">Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
     </main>
 
     <aside class="sidebar" id="right-bar">
@@ -157,5 +147,4 @@
 
     <script src="script.js"></script>
 </body>
-
 </html>

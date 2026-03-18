@@ -1,46 +1,36 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Item 3 - Transformacoes Avancadas 2D</title>
+    <title>Item 3 - Transformações Avançadas 2D</title>
     <link rel="stylesheet" href="styles_legado.css">
 </head>
-
 <body>
     <div class="sidebar" id="left-bar">
-        <div class="nav-box">
-            <h3>Modulos da Pasta</h3>
-            <hr>
-            <a class="nav-link" href="index.html">Item 2 - Recorte e animacao</a>
-            <a class="nav-link active-link" href="transformacoes_legado.html">Item 3 - Transformacoes avancadas (sua
-                parte)</a>
-        </div>
-
         <div class="shape-selection">
             <h3>Selecionar Forma</h3>
             <hr>
             <select id="shape-select">
-                <option value="triangle">Triangulo</option>
+                <option value="triangle">Triângulo</option>
                 <option value="square" selected>Quadrado</option>
-                <option value="pentagon">Pentagono</option>
+                <option value="pentagon">Pentágono</option>
                 <option value="house">Casa</option>
             </select>
             <button id="reset-btn">Resetar Forma</button>
         </div>
 
         <div class="transformation-controls">
-            <h3>Transformacoes</h3>
+            <h3>Transformações</h3>
             <hr>
 
-            <label>Translacao</label>
+            <label>Translação</label>
             <div class="input-group">
                 <input type="number" id="tx" value="0" step="10"> X
                 <input type="number" id="ty" value="0" step="10"> Y
             </div>
 
-            <label>Rotacao (graus)</label>
+            <label>Rotação (graus)</label>
             <div class="input-group">
                 <input type="number" id="rotation" value="0" step="15">
             </div>
@@ -51,13 +41,13 @@
                 <input type="number" id="sy" value="1" step="0.1"> Y
             </div>
 
-            <label>Cisalhamento (Shearing)</label>
+            <label>Cisalhamento</label>
             <div class="input-group">
                 <input type="number" id="shx" value="0" step="0.1"> shX
                 <input type="number" id="shy" value="0" step="0.1"> shY
             </div>
 
-            <label>Reflexao</label>
+            <label>Reflexão</label>
             <div class="checkbox-group">
                 <label><input type="checkbox" id="reflect-x"> Refletir em X</label>
                 <label><input type="checkbox" id="reflect-y"> Refletir em Y</label>
@@ -76,7 +66,7 @@
                 <option value="shear">Cisalhamento</option>
                 <option value="reflection">Reflexão</option>
             </select>
-            <button id="add-to-sequence-btn">Adicionar a Sequência</button>
+            <button id="add-to-sequence-btn">Adicionar à Sequência</button>
             <button id="apply-sequence-btn">Aplicar Sequência</button>
             <button id="clear-sequence-btn" style="background-color: #f44336;">Limpar Sequência</button>
         </div>
@@ -113,7 +103,7 @@
 
     <div class="main">
         <canvas id="canvas" width="600" height="600"></canvas>
-        <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus, Vitor Raimundo</p>
+        <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus e Vitor Raimundo</p>
         <p id="credits2">Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
     </div>
 
@@ -140,7 +130,7 @@
         </div>
 
         <div class="vertices-display">
-            <h3>Vertices Atuais</h3>
+            <h3>Vértices Atuais</h3>
             <hr>
             <div id="vertices-info" style="max-height: 200px; overflow-y: auto;">
                 <em>Carregando...</em>
@@ -158,5 +148,4 @@
 
     <script src="script_legado.js"></script>
 </body>
-
 </html>

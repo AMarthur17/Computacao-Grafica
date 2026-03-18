@@ -1,0 +1,133 @@
+:root {
+  --bg: #101010;
+  --panel: #1f1f1f;
+  --panel-2: #272727;
+  --border: #383838;
+  --text: #f4f0e8;
+  --muted: #c2b8aa;
+  --accent: #2f95ea;
+  --accent-2: #1e6db0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top, rgba(47, 149, 234, 0.1), transparent 30%),
+    linear-gradient(180deg, #141414 0%, #0e0e0e 100%);
+}
+
+.page {
+  width: min(1240px, calc(100% - 48px));
+  margin: 28px auto;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: rgba(31, 31, 31, 0.95);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.hero {
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: #8ebff0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2.3rem, 4vw, 3.4rem);
+}
+
+.lead {
+  max-width: 760px;
+  margin: 12px 0 18px;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 1.05rem;
+}
+
+.team {
+  display: inline-flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(47, 149, 234, 0.08);
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 220px;
+  padding: 20px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--panel-2) 0%, var(--panel) 100%);
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  line-height: 1.05;
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+  flex: 1;
+}
+
+.card a {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.actions {
+  display: grid;
+  gap: 10px;
+}
+
+.card a.secondary {
+  background: #3a3a3a;
+}
+
+@media (max-width: 720px) {
+  .page {
+    width: min(100% - 24px, 1240px);
+    padding: 20px;
+  }
+
+  .team {
+    border-radius: 18px;
+  }
+}
