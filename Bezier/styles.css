@@ -1,0 +1,201 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap');
+
+body {
+    display: flex;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Montserrat', Arial, sans-serif;
+    background: #121212;
+    color: #e0e0e0;
+}
+
+p,
+h3 {
+    user-select: none;
+}
+
+.sidebar {
+    width: 500px;
+    padding: 15px;
+    background: #1e1e1e;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+    border-radius: 10px 0 0 10px;
+    overflow-y: auto;
+    border-right: 1px solid #333;
+    position: relative;
+    color: #e0e0e0;
+}
+
+.main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #181818;
+    position: relative;
+}
+
+.main h1 {
+    color: #f0f0f0;
+    font-size: 20px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+#bounds-info {
+    position: fixed;
+    padding: 10px;
+    font-size: 14px;
+    text-align: center;
+    border-radius: 5px;
+    top: 10px;
+    right: 10px;
+    background: #222;
+    color: #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+canvas {
+    border: 1px solid #555;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    background-color: white;
+    display: block;
+    margin-bottom: 20px;
+    max-width: 95%;
+    height: auto;
+}
+
+#live-coords,
+#points-list {
+    font-size: 13px;
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    color: #ccc;
+}
+
+h3 {
+    font-size: 18px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: #f0f0f0;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #333;
+    margin: 10px 0;
+}
+
+.info-section,
+.coordenadas-cursor,
+.control-points-info,
+.bezier-controls,
+.formula-info {
+    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    border-left: 3px solid #FF6B6B;
+}
+
+.control-points-info {
+    border-left-color: #FF6B6B;
+}
+
+.bezier-controls {
+    border-left-color: #FFD93D;
+}
+
+.formula-info {
+    border-left-color: #6BCB77;
+}
+
+button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+input[type="number"],
+input[type="checkbox"] {
+    background: #2a2a2a;
+    color: #f0f0f0;
+    border: 1px solid #444;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+input[type="number"] {
+    padding: 8px 10px;
+}
+
+input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+label {
+    font-size: 13px;
+    color: #ccc;
+}
+
+.info-section p {
+    margin: 0;
+    font-size: 12px;
+}
+
+/* Scrollbar styling */
+.sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 300px;
+    }
+
+    canvas {
+        max-width: 90vw;
+        height: auto;
+    }
+
+    .main h1 {
+        font-size: 16px;
+    }
+}

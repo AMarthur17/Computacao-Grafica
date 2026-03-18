@@ -1,41 +1,48 @@
 // ===============================
 // ELEMENTOS DO DOM
 // ===============================
-const fileInput = document.getElementById('fileInput');
-const loadBtn = document.getElementById('loadBtn');
-const preloadedSelect = document.getElementById('preloadedSelect');
-const loadPreloadedBtn = document.getElementById('loadPreloadedBtn');
-const resetBtn = document.getElementById('resetBtn');
+const fileInput1 = document.getElementById('fileInput1');
+const fileInput2 = document.getElementById('fileInput2');
+const preloadedSelect1 = document.getElementById('preloadedSelect1');
+const preloadedSelect2 = document.getElementById('preloadedSelect2');
+const loadPreloaded1Btn = document.getElementById('loadPreloaded1Btn');
+const loadPreloaded2Btn = document.getElementById('loadPreloaded2Btn');
+const uploadBtn1 = document.getElementById('uploadBtn1');
+const uploadBtn2 = document.getElementById('uploadBtn2');
 const clearBtn = document.getElementById('clearBtn');
+const saveBtn = document.getElementById('saveBtn');
+const resetBtn = document.getElementById('resetBtn');
 
-const originalCanvas = document.getElementById('originalCanvas');
-const transformedCanvas = document.getElementById('transformedCanvas');
-const originalCtx = originalCanvas.getContext('2d');
-const transformedCtx = transformedCanvas.getContext('2d');
+const canvas1 = document.getElementById('canvas1');
+const canvas2 = document.getElementById('canvas2');
+const resultCanvas = document.getElementById('resultCanvas');
+const ctx1 = canvas1.getContext('2d');
+const ctx2 = canvas2.getContext('2d');
+const resultCtx = resultCanvas.getContext('2d');
 
 const imageInfoDiv = document.getElementById('imageInfo');
-const originalDimensionsDiv = document.getElementById('originalDimensions');
-const transformedDimensionsDiv = document.getElementById('transformedDimensions');
-const historyList = document.getElementById('historyList');
+const info1Div = document.getElementById('info1');
+const info2Div = document.getElementById('info2');
+const resultInfoDiv = document.getElementById('resultInfo');
 
-// Botões de transformação
-const translateBtn = document.getElementById('translateBtn');
-const scaleBtn = document.getElementById('scaleBtn');
-const rotateBtn = document.getElementById('rotateBtn');
-const reflectBtn = document.getElementById('reflectBtn');
-const shearBtn = document.getElementById('shearBtn');
+const kernelSizeSelect = document.getElementById('kernelSize');
+const enhanceFactorInput = document.getElementById('enhanceFactor');
+const enhanceValueSpan = document.getElementById('enhanceValue');
+
+// Botões de filtros
+const filterButtons = document.querySelectorAll('.btn-filter');
+const operationButtons = document.querySelectorAll('.btn-operation');
+const logicalButtons = document.querySelectorAll('.btn-logical');
 
 // ===============================
 // VARIÁVEIS GLOBAIS
 // ===============================
-let originalImageData = null; // Dados originais da imagem
-let currentImageData = null;  // Dados atuais (após transformações)
-let originalWidth = 0;
-let originalHeight = 0;
-let history = [];
+let image1Data = null;
+let image2Data = null;
+let resultImageData = null;
 
 // ===============================
-// ESTRUTURA DE DADOS DA IMAGEM
+// CLASSE DE IMAGEM
 // ===============================
 class ImageData2D {
     constructor(width, height, pixels = null) {
@@ -44,30 +51,33 @@ class ImageData2D {
         this.pixels = pixels || new Array(height).fill(null).map(() => new Array(width).fill(0));
     }
 
+    clone() {
+        const newPixels = this.pixels.map(row => [...row]);
+        return new ImageData2D(this.width, this.height, newPixels);
+    }
+
     getPixel(x, y) {
         if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
             return this.pixels[y][x];
         }
-        return 0; // Retorna preto para pixels fora dos limites
+        return 0;
     }
 
     setPixel(x, y, value) {
         if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
-            this.pixels[y][x] = value;
+            this.pixels[y][x] = Math.max(0, Math.min(255, Math.round(value)));
         }
     }
 }
+
 
 // ===============================
 // PARSER DE ARQUIVO PGM
 // ===============================
 function parsePGM(arrayBuffer) {
     const uint8Array = new Uint8Array(arrayBuffer);
-
-    // Função para ler o cabeçalho byte a byte
     let pos = 0;
 
-    // Pula espaços em branco
     function skipWhitespace() {
         while (pos < uint8Array.length &&
             (uint8Array[pos] === 32 || uint8Array[pos] === 9 ||
@@ -76,18 +86,16 @@ function parsePGM(arrayBuffer) {
         }
     }
 
-    // Pula comentários
     function skipComments() {
-        while (pos < uint8Array.length && uint8Array[pos] === 35) { // '#'
-            while (pos < uint8Array.length && uint8Array[pos] !== 10) { // até '\n'
+        while (pos < uint8Array.length && uint8Array[pos] === 35) {
+            while (pos < uint8Array.length && uint8Array[pos] !== 10) {
                 pos++;
             }
-            pos++; // pula o '\n'
+            pos++;
             skipWhitespace();
         }
     }
 
-    // Lê um token (palavra)
     function readToken() {
         skipWhitespace();
         skipComments();
@@ -101,29 +109,20 @@ function parsePGM(arrayBuffer) {
         return token;
     }
 
-    // Lê o tipo (P2 ou P5)
     const magicNumber = readToken();
-
-    // Lê dimensões
     const width = parseInt(readToken());
     const height = parseInt(readToken());
-
-    // Lê valor máximo
     const maxVal = parseInt(readToken());
 
-    // Pula um único caractere de espaço em branco após maxVal
     if (pos < uint8Array.length &&
         (uint8Array[pos] === 32 || uint8Array[pos] === 9 ||
             uint8Array[pos] === 10 || uint8Array[pos] === 13)) {
         pos++;
     }
 
-    console.log(`Formato: ${magicNumber}, Dimensões: ${width}x${height}, Max: ${maxVal}, DataStart: ${pos}`);
-
     const imageData = new ImageData2D(width, height);
 
     if (magicNumber === 'P2') {
-        // Formato ASCII
         let values = [];
         while (pos < uint8Array.length) {
             const token = readToken();
@@ -143,7 +142,6 @@ function parsePGM(arrayBuffer) {
             }
         }
     } else if (magicNumber === 'P5') {
-        // Formato binário
         let idx = pos;
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
@@ -157,10 +155,17 @@ function parsePGM(arrayBuffer) {
     return imageData;
 }
 
+
 // ===============================
-// RENDERIZAÇÃO NO CANVAS
+// RENDERIZAÇÃO
 // ===============================
-function renderImage(imageData, canvas, ctx, dimensionsDiv) {
+function renderImage(imageData, canvas, ctx, infoDiv, label) {
+    if (!imageData) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        infoDiv.textContent = '';
+        return;
+    }
+
     canvas.width = imageData.width;
     canvas.height = imageData.height;
 
@@ -170,479 +175,509 @@ function renderImage(imageData, canvas, ctx, dimensionsDiv) {
         for (let x = 0; x < imageData.width; x++) {
             const value = imageData.getPixel(x, y);
             const idx = (y * imageData.width + x) * 4;
-            canvasImageData.data[idx] = value;     // R
-            canvasImageData.data[idx + 1] = value; // G
-            canvasImageData.data[idx + 2] = value; // B
-            canvasImageData.data[idx + 3] = 255;   // A
+            canvasImageData.data[idx] = value;
+            canvasImageData.data[idx + 1] = value;
+            canvasImageData.data[idx + 2] = value;
+            canvasImageData.data[idx + 3] = 255;
         }
     }
 
     ctx.putImageData(canvasImageData, 0, 0);
-    dimensionsDiv.textContent = `${imageData.width} x ${imageData.height} pixels`;
+    infoDiv.textContent = `${label}: ${imageData.width} × ${imageData.height} pixels`;
 }
 
-// ===============================
-// CARREGAMENTO DE IMAGEM
-// ===============================
-function loadImage(arrayBuffer) {
+function loadImage(arrayBuffer, slotNumber) {
     try {
-        originalImageData = parsePGM(arrayBuffer);
-        currentImageData = new ImageData2D(originalImageData.width, originalImageData.height);
-
-        // Copia pixels
-        for (let y = 0; y < originalImageData.height; y++) {
-            for (let x = 0; x < originalImageData.width; x++) {
-                currentImageData.setPixel(x, y, originalImageData.getPixel(x, y));
-            }
+        const imageData = parsePGM(arrayBuffer);
+        
+        if (slotNumber === 1) {
+            image1Data = imageData;
+            renderImage(image1Data, canvas1, ctx1, info1Div, 'Imagem 1');
+        } else {
+            image2Data = imageData;
+            renderImage(image2Data, canvas2, ctx2, info2Div, 'Imagem 2');
         }
 
-        originalWidth = originalImageData.width;
-        originalHeight = originalImageData.height;
-
-        renderImage(originalImageData, originalCanvas, originalCtx, originalDimensionsDiv);
-        renderImage(currentImageData, transformedCanvas, transformedCtx, transformedDimensionsDiv);
-
         updateImageInfo();
-        history = [];
-        updateHistory();
-
-        enableTransformButtons();
-
-        alert('Imagem carregada com sucesso!');
     } catch (error) {
-        console.error('Erro ao carregar imagem:', error);
-        alert('Erro ao carregar imagem PGM. Verifique o formato do arquivo.');
+        console.error('Erro ao carregar:', error);
+        alert(`Erro ao carregar imagem ${slotNumber}: ${error.message}`);
     }
 }
 
-loadBtn.addEventListener('click', () => {
-    const file = fileInput.files[0];
+// ===============================
+// EVENTOS DE CARREGAMENTO
+// ===============================
+uploadBtn1.addEventListener('click', () => {
+    const file = fileInput1.files[0];
     if (!file) {
-        alert('Por favor, selecione um arquivo primeiro.');
+        alert('Selecione um arquivo para a Imagem 1');
         return;
     }
-
     const reader = new FileReader();
-    reader.onload = (e) => loadImage(e.target.result);
+    reader.onload = (e) => loadImage(e.target.result, 1);
     reader.readAsArrayBuffer(file);
 });
 
-loadPreloadedBtn.addEventListener('click', () => {
-    const path = preloadedSelect.value;
-    if (!path) {
-        alert('Por favor, selecione uma imagem.');
+uploadBtn2.addEventListener('click', () => {
+    const file = fileInput2.files[0];
+    if (!file) {
+        alert('Selecione um arquivo para a Imagem 2');
         return;
     }
-
-    fetch(path)
-        .then(response => response.arrayBuffer())
-        .then(arrayBuffer => loadImage(arrayBuffer))
-        .catch(error => {
-            console.error('Erro ao carregar imagem pré-carregada:', error);
-            alert('Erro ao carregar imagem. Verifique se o arquivo existe.');
-        });
+    const reader = new FileReader();
+    reader.onload = (e) => loadImage(e.target.result, 2);
+    reader.readAsArrayBuffer(file);
 });
 
-// ===============================
-// ATUALIZAÇÃO DA INTERFACE
-// ===============================
+loadPreloaded1Btn.addEventListener('click', () => {
+    const path = preloadedSelect1.value;
+    if (!path) {
+        alert('Selecione uma imagem');
+        return;
+    }
+    fetch(path)
+        .then(r => r.arrayBuffer())
+        .then(ab => loadImage(ab, 1))
+        .catch(e => alert(`Erro: ${e.message}`));
+});
+
+loadPreloaded2Btn.addEventListener('click', () => {
+    const path = preloadedSelect2.value;
+    if (!path) {
+        alert('Selecione uma imagem');
+        return;
+    }
+    fetch(path)
+        .then(r => r.arrayBuffer())
+        .then(ab => loadImage(ab, 2))
+        .catch(e => alert(`Erro: ${e.message}`));
+});
+
 function updateImageInfo() {
-    imageInfoDiv.innerHTML = `
-        <strong>Largura:</strong> ${originalWidth} px<br>
-        <strong>Altura:</strong> ${originalHeight} px<br>
-        <strong>Total de Pixels:</strong> ${originalWidth * originalHeight}<br>
-        <strong>Formato:</strong> PGM (Grayscale)
-    `;
-}
-
-function updateHistory() {
-    if (history.length === 0) {
-        historyList.innerHTML = 'Nenhuma transformação aplicada';
-    } else {
-        historyList.innerHTML = history.map((item, idx) =>
-            `<div class="history-item">${idx + 1}. ${item}</div>`
-        ).join('');
+    let info = '';
+    if (image1Data) {
+        info += `<strong>I1:</strong> ${image1Data.width}×${image1Data.height} pixels<br>`;
     }
-}
-
-function enableTransformButtons() {
-    translateBtn.disabled = false;
-    scaleBtn.disabled = false;
-    rotateBtn.disabled = false;
-    reflectBtn.disabled = false;
-    shearBtn.disabled = false;
+    if (image2Data) {
+        info += `<strong>I2:</strong> ${image2Data.width}×${image2Data.height} pixels<br>`;
+    }
+    if (resultImageData) {
+        info += `<strong>Resultado:</strong> ${resultImageData.width}×${resultImageData.height} pixels`;
+    }
+    imageInfoDiv.innerHTML = info || 'Nenhuma imagem carregada';
 }
 
 // ===============================
-// TRANSFORMAÇÕES GEOMÉTRICAS
+// 8 FILTROS
 // ===============================
 
-// MATRIZ DE TRANSFORMAÇÃO 3x3 (Coordenadas Homogêneas)
-class TransformMatrix {
-    constructor() {
-        // Matriz identidade
-        this.matrix = [
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1]
-        ];
-    }
+// 1. FILTRO DE MEDIANA
+function filterMedian(imageData) {
+    const result = imageData.clone();
+    const kernelSize = parseInt(kernelSizeSelect.value);
+    const radius = Math.floor(kernelSize / 2);
 
-    multiply(other) {
-        const result = new TransformMatrix();
-        for (let i = 0; i < 3; i++) {
-            for (let j = 0; j < 3; j++) {
-                result.matrix[i][j] = 0;
-                for (let k = 0; k < 3; k++) {
-                    result.matrix[i][j] += this.matrix[i][k] * other.matrix[k][j];
+    for (let y = 0; y < imageData.height; y++) {
+        for (let x = 0; x < imageData.width; x++) {
+            const values = [];
+            for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                    values.push(imageData.getPixel(x + dx, y + dy));
                 }
             }
+            values.sort((a, b) => a - b);
+            const median = values[Math.floor(values.length / 2)];
+            result.setPixel(x, y, median);
         }
-        return result;
     }
-
-    transform(x, y) {
-        const newX = this.matrix[0][0] * x + this.matrix[0][1] * y + this.matrix[0][2];
-        const newY = this.matrix[1][0] * x + this.matrix[1][1] * y + this.matrix[1][2];
-        return { x: newX, y: newY };
-    }
-
-    static translation(dx, dy) {
-        const m = new TransformMatrix();
-        m.matrix[0][2] = dx;
-        m.matrix[1][2] = dy;
-        return m;
-    }
-
-    static scale(sx, sy) {
-        const m = new TransformMatrix();
-        m.matrix[0][0] = sx;
-        m.matrix[1][1] = sy;
-        return m;
-    }
-
-    static rotation(angleRadians) {
-        const m = new TransformMatrix();
-        const cos = Math.cos(angleRadians);
-        const sin = Math.sin(angleRadians);
-        m.matrix[0][0] = cos;
-        m.matrix[0][1] = -sin;
-        m.matrix[1][0] = sin;
-        m.matrix[1][1] = cos;
-        return m;
-    }
-
-    static reflection(reflectX, reflectY) {
-        const m = new TransformMatrix();
-        if (reflectX) m.matrix[1][1] = -1; // Espelha verticalmente
-        if (reflectY) m.matrix[0][0] = -1; // Espelha horizontalmente
-        return m;
-    }
-
-    static shear(shx, shy) {
-        const m = new TransformMatrix();
-        m.matrix[0][1] = shx;
-        m.matrix[1][0] = shy;
-        return m;
-    }
+    return result;
 }
 
-// APLICAR TRANSFORMAÇÃO NA IMAGEM
-function applyTransformation(matrix, useNearestNeighbor = true, isTranslation = false) {
-    if (!currentImageData) {
-        alert('Carregue uma imagem primeiro!');
-        return;
-    }
+// 2. FILTRO DE MÉDIA
+function filterMean(imageData) {
+    const result = imageData.clone();
+    const kernelSize = parseInt(kernelSizeSelect.value);
+    const radius = Math.floor(kernelSize / 2);
 
-    // Calcula os limites da nova imagem
-    const corners = [
-        { x: 0, y: 0 },
-        { x: currentImageData.width - 1, y: 0 },
-        { x: currentImageData.width - 1, y: currentImageData.height - 1 },
-        { x: 0, y: currentImageData.height - 1 }
-    ];
-
-    const transformedCorners = corners.map(c => matrix.transform(c.x, c.y));
-
-    let minX = Math.floor(Math.min(...transformedCorners.map(c => c.x)));
-    let maxX = Math.ceil(Math.max(...transformedCorners.map(c => c.x)));
-    let minY = Math.floor(Math.min(...transformedCorners.map(c => c.y)));
-    let maxY = Math.ceil(Math.max(...transformedCorners.map(c => c.y)));
-
-    // Para translação, mantém um canvas maior para visualizar o movimento
-    if (isTranslation) {
-        const padding = Math.max(originalWidth, originalHeight) * 2;
-        minX = Math.min(minX, -padding);
-        maxX = Math.max(maxX, currentImageData.width - 1 + padding);
-        minY = Math.min(minY, -padding);
-        maxY = Math.max(maxY, currentImageData.height - 1 + padding);
-    }
-
-    const newWidth = maxX - minX + 1;
-    const newHeight = maxY - minY + 1;
-
-    console.log(`Nova dimensão: ${newWidth}x${newHeight}, Offset: (${minX}, ${minY})`);
-
-    const newImageData = new ImageData2D(newWidth, newHeight);
-
-    // Matriz inversa para mapeamento reverso
-    const invMatrix = invertMatrix(matrix.matrix);
-
-    // Para cada pixel da imagem de destino, encontra o pixel correspondente na origem
-    for (let y = 0; y < newHeight; y++) {
-        for (let x = 0; x < newWidth; x++) {
-            // Coordenadas no espaço transformado
-            const worldX = x + minX;
-            const worldY = y + minY;
-
-            // Aplica transformação inversa
-            const srcX = invMatrix[0][0] * worldX + invMatrix[0][1] * worldY + invMatrix[0][2];
-            const srcY = invMatrix[1][0] * worldX + invMatrix[1][1] * worldY + invMatrix[1][2];
-
-            let pixelValue = 0;
-
-            if (useNearestNeighbor) {
-                // Interpolação Nearest Neighbor
-                const ix = Math.round(srcX);
-                const iy = Math.round(srcY);
-                pixelValue = currentImageData.getPixel(ix, iy);
-            } else {
-                // Interpolação Bilinear
-                pixelValue = bilinearInterpolation(currentImageData, srcX, srcY);
+    for (let y = 0; y < imageData.height; y++) {
+        for (let x = 0; x < imageData.width; x++) {
+            let sum = 0;
+            let count = 0;
+            for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                    sum += imageData.getPixel(x + dx, y + dy);
+                    count++;
+                }
             }
+            result.setPixel(x, y, sum / count);
+        }
+    }
+    return result;
+}
 
-            newImageData.setPixel(x, y, pixelValue);
+// 3. FILTRO GAUSSIANO
+function filterGaussian(imageData) {
+    const result = imageData.clone();
+    const kernelSize = parseInt(kernelSizeSelect.value);
+    const sigma = kernelSize / 6;
+
+    // Cria kernel gaussiano
+    const kernel = [];
+    const radius = Math.floor(kernelSize / 2);
+    let sum = 0;
+
+    for (let dy = -radius; dy <= radius; dy++) {
+        const row = [];
+        for (let dx = -radius; dx <= radius; dx++) {
+            const value = Math.exp(-(dx * dx + dy * dy) / (2 * sigma * sigma));
+            row.push(value);
+            sum += value;
+        }
+        kernel.push(row);
+    }
+
+    // Normaliza kernel
+    for (let i = 0; i < kernel.length; i++) {
+        for (let j = 0; j < kernel[i].length; j++) {
+            kernel[i][j] /= sum;
         }
     }
 
-    currentImageData = newImageData;
-    renderImage(currentImageData, transformedCanvas, transformedCtx, transformedDimensionsDiv);
-}
-
-// INTERPOLAÇÃO BILINEAR
-function bilinearInterpolation(imageData, x, y) {
-    const x1 = Math.floor(x);
-    const x2 = x1 + 1;
-    const y1 = Math.floor(y);
-    const y2 = y1 + 1;
-
-    const Q11 = imageData.getPixel(x1, y1);
-    const Q21 = imageData.getPixel(x2, y1);
-    const Q12 = imageData.getPixel(x1, y2);
-    const Q22 = imageData.getPixel(x2, y2);
-
-    const dx = x - x1;
-    const dy = y - y1;
-
-    const R1 = Q11 * (1 - dx) + Q21 * dx;
-    const R2 = Q12 * (1 - dx) + Q22 * dx;
-
-    return Math.round(R1 * (1 - dy) + R2 * dy);
-}
-
-// INVERSÃO DE MATRIZ 3x3
-function invertMatrix(m) {
-    const det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
-        m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
-        m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
-
-    if (Math.abs(det) < 1e-10) {
-        console.error('Matriz não inversível');
-        return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
-    }
-
-    const inv = [
-        [
-            (m[1][1] * m[2][2] - m[1][2] * m[2][1]) / det,
-            (m[0][2] * m[2][1] - m[0][1] * m[2][2]) / det,
-            (m[0][1] * m[1][2] - m[0][2] * m[1][1]) / det
-        ],
-        [
-            (m[1][2] * m[2][0] - m[1][0] * m[2][2]) / det,
-            (m[0][0] * m[2][2] - m[0][2] * m[2][0]) / det,
-            (m[0][2] * m[1][0] - m[0][0] * m[1][2]) / det
-        ],
-        [
-            (m[1][0] * m[2][1] - m[1][1] * m[2][0]) / det,
-            (m[0][1] * m[2][0] - m[0][0] * m[2][1]) / det,
-            (m[0][0] * m[1][1] - m[0][1] * m[1][0]) / det
-        ]
-    ];
-
-    return inv;
-}
-
-// ===============================
-// EVENTOS DOS BOTÕES DE TRANSFORMAÇÃO
-// ===============================
-
-// TRANSLAÇÃO
-translateBtn.addEventListener('click', () => {
-    const dx = parseFloat(document.getElementById('translateX').value) || 0;
-    const dy = parseFloat(document.getElementById('translateY').value) || 0;
-
-    const matrix = TransformMatrix.translation(dx, dy);
-    applyTransformation(matrix, true, true); // true = useNN, true = isTranslation
-
-    history.push(`Translação: Δx=${dx}, Δy=${dy}`);
-    updateHistory();
-    console.log(`Aplicada translação: (${dx}, ${dy})`);
-});
-
-// ESCALA
-scaleBtn.addEventListener('click', () => {
-    const sx = parseFloat(document.getElementById('scaleX').value) || 1;
-    const sy = parseFloat(document.getElementById('scaleY').value) || 1;
-    const useNN = document.getElementById('nearestNeighbor').checked;
-
-    // Escala em torno do centro da imagem
-    const cx = currentImageData.width / 2;
-    const cy = currentImageData.height / 2;
-
-    const t1 = TransformMatrix.translation(-cx, -cy);
-    const s = TransformMatrix.scale(sx, sy);
-    const t2 = TransformMatrix.translation(cx, cy);
-
-    const matrix = t2.multiply(s).multiply(t1);
-    applyTransformation(matrix, useNN);
-
-    history.push(`Escala: Sx=${sx}, Sy=${sy} (${useNN ? 'NN' : 'Bilinear'})`);
-    updateHistory();
-    console.log(`Aplicada escala: (${sx}, ${sy})`);
-});
-
-// ROTAÇÃO
-rotateBtn.addEventListener('click', () => {
-    const angle = parseFloat(document.getElementById('rotateAngle').value) || 0;
-    const angleRad = angle * Math.PI / 180;
-
-    let cx = parseFloat(document.getElementById('rotateCenterX').value);
-    let cy = parseFloat(document.getElementById('rotateCenterY').value);
-
-    // Se não especificado, usa centro da imagem
-    if (isNaN(cx)) cx = currentImageData.width / 2;
-    if (isNaN(cy)) cy = currentImageData.height / 2;
-
-    const t1 = TransformMatrix.translation(-cx, -cy);
-    const r = TransformMatrix.rotation(angleRad);
-    const t2 = TransformMatrix.translation(cx, cy);
-
-    const matrix = t2.multiply(r).multiply(t1);
-    applyTransformation(matrix, false); // Usa bilinear para rotação
-
-    history.push(`Rotação: ${angle}° em torno de (${cx.toFixed(1)}, ${cy.toFixed(1)})`);
-    updateHistory();
-    console.log(`Aplicada rotação: ${angle}° `);
-});
-
-// REFLEXÃO
-reflectBtn.addEventListener('click', () => {
-    const reflectX = document.getElementById('reflectX').checked;
-    const reflectY = document.getElementById('reflectY').checked;
-
-    if (!reflectX && !reflectY) {
-        alert('Selecione pelo menos uma direção de reflexão!');
-        return;
-    }
-
-    // Reflexão em torno do centro
-    const cx = currentImageData.width / 2;
-    const cy = currentImageData.height / 2;
-
-    const t1 = TransformMatrix.translation(-cx, -cy);
-    const ref = TransformMatrix.reflection(reflectX, reflectY);
-    const t2 = TransformMatrix.translation(cx, cy);
-
-    const matrix = t2.multiply(ref).multiply(t1);
-    applyTransformation(matrix);
-
-    const axis = [reflectX && 'X', reflectY && 'Y'].filter(Boolean).join(' e ');
-    history.push(`Reflexão em ${axis}`);
-    updateHistory();
-    console.log(`Aplicada reflexão em ${axis}`);
-});
-
-// CISALHAMENTO
-shearBtn.addEventListener('click', () => {
-    const shx = parseFloat(document.getElementById('shearX').value) || 0;
-    const shy = parseFloat(document.getElementById('shearY').value) || 0;
-
-    const matrix = TransformMatrix.shear(shx, shy);
-    applyTransformation(matrix);
-
-    history.push(`Cisalhamento: Shx=${shx}, Shy=${shy}`);
-    updateHistory();
-    console.log(`Aplicado cisalhamento: (${shx}, ${shy})`);
-});
-
-// ===============================
-// CONTROLES GERAIS
-// ===============================
-
-// RESETAR
-resetBtn.addEventListener('click', () => {
-    if (!originalImageData) {
-        alert('Nenhuma imagem carregada!');
-        return;
-    }
-
-    currentImageData = new ImageData2D(originalImageData.width, originalImageData.height);
-
-    for (let y = 0; y < originalImageData.height; y++) {
-        for (let x = 0; x < originalImageData.width; x++) {
-            currentImageData.setPixel(x, y, originalImageData.getPixel(x, y));
+    // Aplica filtro
+    for (let y = 0; y < imageData.height; y++) {
+        for (let x = 0; x < imageData.width; x++) {
+            let value = 0;
+            for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                    value += imageData.getPixel(x + dx, y + dy) * kernel[dy + radius][dx + radius];
+                }
+            }
+            result.setPixel(x, y, value);
         }
     }
+    return result;
+}
 
-    renderImage(currentImageData, transformedCanvas, transformedCtx, transformedDimensionsDiv);
-    history = [];
-    updateHistory();
-    console.log('Imagem resetada para original');
+// 4. FILTRO SOBEL
+function filterSobel(imageData) {
+    const result = new ImageData2D(imageData.width, imageData.height);
+    const Gx = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
+    const Gy = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
+
+    for (let y = 1; y < imageData.height - 1; y++) {
+        for (let x = 1; x < imageData.width - 1; x++) {
+            let px = 0, py = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    const pixel = imageData.getPixel(x + dx, y + dy);
+                    px += pixel * Gx[dy + 1][dx + 1];
+                    py += pixel * Gy[dy + 1][dx + 1];
+                }
+            }
+            const magnitude = Math.sqrt(px * px + py * py) / 8;
+            result.setPixel(x, y, magnitude);
+        }
+    }
+    return result;
+}
+
+// 5. FILTRO LAPLACIANO
+function filterLaplacian(imageData) {
+    const result = new ImageData2D(imageData.width, imageData.height);
+    const kernel = [[0, -1, 0], [-1, 4, -1], [0, -1, 0]];
+
+    for (let y = 1; y < imageData.height - 1; y++) {
+        for (let x = 1; x < imageData.width - 1; x++) {
+            let value = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    value += imageData.getPixel(x + dx, y + dy) * kernel[dy + 1][dx + 1];
+                }
+            }
+            result.setPixel(x, y, Math.abs(value));
+        }
+    }
+    return result;
+}
+
+// 6. FILTRO PASSA ALTA
+function filterHighPass(imageData) {
+    const result = new ImageData2D(imageData.width, imageData.height);
+    const kernel = [[0, -1, 0], [-1, 5, -1], [0, -1, 0]];
+
+    for (let y = 1; y < imageData.height - 1; y++) {
+        for (let x = 1; x < imageData.width - 1; x++) {
+            let value = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    value += imageData.getPixel(x + dx, y + dy) * kernel[dy + 1][dx + 1];
+                }
+            }
+            result.setPixel(x, y, value);
+        }
+    }
+    return result;
+}
+
+// 7. FILTRO DE REALCE
+function filterEnhance(imageData) {
+    const factor = parseFloat(enhanceFactorInput.value) || 1.5;
+    const result = imageData.clone();
+
+    // Calcular média
+    const blurred = filterMean(imageData);
+
+    for (let y = 0; y < imageData.height; y++) {
+        for (let x = 0; x < imageData.width; x++) {
+            const original = imageData.getPixel(x, y);
+            const smooth = blurred.getPixel(x, y);
+            const enhanced = original + factor * (original - smooth);
+            result.setPixel(x, y, enhanced);
+        }
+    }
+    return result;
+}
+
+// 8. FILTRO DE DETECÇÃO DE BORDAS
+function filterEdgeDetection(imageData) {
+    const result = new ImageData2D(imageData.width, imageData.height);
+    
+    for (let y = 1; y < imageData.height - 1; y++) {
+        for (let x = 1; x < imageData.width - 1; x++) {
+            const gx = -imageData.getPixel(x-1, y-1) - 2*imageData.getPixel(x-1, y) - imageData.getPixel(x-1, y+1) +
+                       imageData.getPixel(x+1, y-1) + 2*imageData.getPixel(x+1, y) + imageData.getPixel(x+1, y+1);
+            
+            const gy = imageData.getPixel(x-1, y-1) + 2*imageData.getPixel(x, y-1) + imageData.getPixel(x+1, y-1) -
+                       imageData.getPixel(x-1, y+1) - 2*imageData.getPixel(x, y+1) - imageData.getPixel(x+1, y+1);
+            
+            const magnitude = Math.sqrt(gx*gx + gy*gy) / 8;
+            result.setPixel(x, y, magnitude > 50 ? 255 : 0);
+        }
+    }
+    return result;
+}
+
+// ===============================
+// OPERAÇÕES ARITMÉTICAS
+// ===============================
+function operationAdd(img1, img2) {
+    const width = Math.min(img1.width, img2.width);
+    const height = Math.min(img1.height, img2.height);
+    const result = new ImageData2D(width, height);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const sum = img1.getPixel(x, y) + img2.getPixel(x, y);
+            result.setPixel(x, y, sum / 2);
+        }
+    }
+    return result;
+}
+
+function operationSubtract(img1, img2) {
+    const width = Math.min(img1.width, img2.width);
+    const height = Math.min(img1.height, img2.height);
+    const result = new ImageData2D(width, height);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const diff = img1.getPixel(x, y) - img2.getPixel(x, y);
+            result.setPixel(x, y, Math.abs(diff));
+        }
+    }
+    return result;
+}
+
+function operationMultiply(img1, img2) {
+    const width = Math.min(img1.width, img2.width);
+    const height = Math.min(img1.height, img2.height);
+    const result = new ImageData2D(width, height);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const mul = (img1.getPixel(x, y) * img2.getPixel(x, y)) / 255;
+            result.setPixel(x, y, mul);
+        }
+    }
+    return result;
+}
+
+function operationDivide(img1, img2) {
+    const width = Math.min(img1.width, img2.width);
+    const height = Math.min(img1.height, img2.height);
+    const result = new ImageData2D(width, height);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const p2 = img2.getPixel(x, y);
+            const div = p2 !== 0 ? (img1.getPixel(x, y) / p2) * 255 : 0;
+            result.setPixel(x, y, div);
+        }
+    }
+    return result;
+}
+
+// ===============================
+// OPERADORES LÓGICOS
+// ===============================
+function logicalOr(img1, img2) {
+    const width = Math.min(img1.width, img2.width);
+    const height = Math.min(img1.height, img2.height);
+    const result = new ImageData2D(width, height);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const p1 = img1.getPixel(x, y) > 127 ? 255 : 0;
+            const p2 = img2.getPixel(x, y) > 127 ? 255 : 0;
+            result.setPixel(x, y, p1 | p2);
+        }
+    }
+    return result;
+}
+
+function logicalAnd(img1, img2) {
+    const width = Math.min(img1.width, img2.width);
+    const height = Math.min(img1.height, img2.height);
+    const result = new ImageData2D(width, height);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const p1 = img1.getPixel(x, y) > 127 ? 255 : 0;
+            const p2 = img2.getPixel(x, y) > 127 ? 255 : 0;
+            result.setPixel(x, y, p1 & p2);
+        }
+    }
+    return result;
+}
+
+function logicalXor(img1, img2) {
+    const width = Math.min(img1.width, img2.width);
+    const height = Math.min(img1.height, img2.height);
+    const result = new ImageData2D(width, height);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const p1 = img1.getPixel(x, y) > 127 ? 255 : 0;
+            const p2 = img2.getPixel(x, y) > 127 ? 255 : 0;
+            result.setPixel(x, y, p1 ^ p2);
+        }
+    }
+    return result;
+}
+
+// ===============================
+// EVENTOS DOS BOTÕES
+// ===============================
+
+// Filtros
+filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (!image1Data) {
+            alert('Carregue a Imagem 1');
+            return;
+        }
+
+        const filter = btn.dataset.filter;
+        let result;
+
+        switch (filter) {
+            case 'median': result = filterMedian(image1Data); break;
+            case 'mean': result = filterMean(image1Data); break;
+            case 'gaussian': result = filterGaussian(image1Data); break;
+            case 'sobel': result = filterSobel(image1Data); break;
+            case 'laplacian': result = filterLaplacian(image1Data); break;
+            case 'highpass': result = filterHighPass(image1Data); break;
+            case 'enhance': result = filterEnhance(image1Data); break;
+            case 'edge': result = filterEdgeDetection(image1Data); break;
+        }
+
+        resultImageData = result;
+        renderImage(resultImageData, resultCanvas, resultCtx, resultInfoDiv, 'Resultado');
+        updateImageInfo();
+    });
 });
 
-// LIMPAR
+// Operações
+operationButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (!image1Data || !image2Data) {
+            alert('Carregue as duas imagens');
+            return;
+        }
+
+        const op = btn.dataset.op;
+        let result;
+
+        switch (op) {
+            case 'add': result = operationAdd(image1Data, image2Data); break;
+            case 'subtract': result = operationSubtract(image1Data, image2Data); break;
+            case 'multiply': result = operationMultiply(image1Data, image2Data); break;
+            case 'divide': result = operationDivide(image1Data, image2Data); break;
+        }
+
+        resultImageData = result;
+        renderImage(resultImageData, resultCanvas, resultCtx, resultInfoDiv, 'Resultado');
+        updateImageInfo();
+    });
+});
+
+// Operadores Lógicos
+logicalButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (!image1Data || !image2Data) {
+            alert('Carregue as duas imagens');
+            return;
+        }
+
+        const logic = btn.dataset.logic;
+        let result;
+
+        switch (logic) {
+            case 'or': result = logicalOr(image1Data, image2Data); break;
+            case 'and': result = logicalAnd(image1Data, image2Data); break;
+            case 'xor': result = logicalXor(image1Data, image2Data); break;
+        }
+
+        resultImageData = result;
+        renderImage(resultImageData, resultCanvas, resultCtx, resultInfoDiv, 'Resultado');
+        updateImageInfo();
+    });
+});
+
+// Parâmetros
+enhanceFactorInput.addEventListener('input', () => {
+    enhanceValueSpan.textContent = enhanceFactorInput.value;
+});
+
+// Botões gerais
 clearBtn.addEventListener('click', () => {
-    originalImageData = null;
-    currentImageData = null;
-    originalWidth = 0;
-    originalHeight = 0;
-    history = [];
-
-    originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
-    transformedCtx.clearRect(0, 0, transformedCanvas.width, transformedCanvas.height);
-
-    originalCanvas.width = 0;
-    originalCanvas.height = 0;
-    transformedCanvas.width = 0;
-    transformedCanvas.height = 0;
-
+    image1Data = null;
+    image2Data = null;
+    resultImageData = null;
+    document.querySelectorAll('canvas').forEach(c => {
+        c.width = 0;
+        c.height = 0;
+        c.getContext('2d').clearRect(0, 0, c.width, c.height);
+    });
     imageInfoDiv.innerHTML = 'Nenhuma imagem carregada';
-    originalDimensionsDiv.textContent = '';
-    transformedDimensionsDiv.textContent = '';
-    updateHistory();
-
-    translateBtn.disabled = true;
-    scaleBtn.disabled = true;
-    rotateBtn.disabled = true;
-    reflectBtn.disabled = true;
-    shearBtn.disabled = true;
-
-    fileInput.value = '';
-    preloadedSelect.value = '';
-
-    console.log('Tudo limpo');
+    info1Div.textContent = '';
+    info2Div.textContent = '';
+    resultInfoDiv.textContent = '';
+    fileInput1.value = '';
+    fileInput2.value = '';
 });
 
-// ===============================
-// INICIALIZAÇÃO
-// ===============================
-document.addEventListener('DOMContentLoaded', () => {
-    translateBtn.disabled = true;
-    scaleBtn.disabled = true;
-    rotateBtn.disabled = true;
-    reflectBtn.disabled = true;
-    shearBtn.disabled = true;
+resetBtn.addEventListener('click', () => {
+    resultImageData = null;
+    renderImage(resultImageData, resultCanvas, resultCtx, resultInfoDiv, 'Resultado');
+    updateImageInfo();
+});
 
-    console.log('Sistema de Processamento de Imagens inicializado');
-    console.log('Carregue uma imagem PGM para começar');
+saveBtn.addEventListener('click', () => {
+    if (!resultImageData) {
+        alert('Nenhum resultado para salvar');
+        return;
+    }
+    alert('Funcionalidade de salvamento disponível na versão desktop');
 });
