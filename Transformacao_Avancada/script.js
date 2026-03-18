@@ -750,7 +750,7 @@ function renderLineStatus(line, clippedLine) {
 
     if (!clippedLine.accepted) {
         lineStatus.innerHTML = `
-            <strong>Original:</strong> (${line.x1.toFixed(1)}, ${line.y1.toFixed(1)}) ate (${line.x2.toFixed(1)}, ${line.y2.toFixed(1)})<br>
+            <strong>Original:</strong> (${line.x1.toFixed(1)}, ${line.y1.toFixed(1)}) até (${line.x2.toFixed(1)}, ${line.y2.toFixed(1)})<br>
             <strong>Comprimento:</strong> ${line.length.toFixed(2)}<br>
             <strong>Diagonal da janela:</strong> ${line.diagonal.toFixed(2)}<br>
             <strong>Ponto médio:</strong> (${midpointX.toFixed(1)}, ${midpointY.toFixed(1)})<br>
@@ -760,8 +760,8 @@ function renderLineStatus(line, clippedLine) {
     }
 
     lineStatus.innerHTML = `
-        <strong>Original:</strong> (${line.x1.toFixed(1)}, ${line.y1.toFixed(1)}) ate (${line.x2.toFixed(1)}, ${line.y2.toFixed(1)})<br>
-        <strong>Recortada:</strong> (${clippedLine.x1.toFixed(1)}, ${clippedLine.y1.toFixed(1)}) ate (${clippedLine.x2.toFixed(1)}, ${clippedLine.y2.toFixed(1)})<br>
+        <strong>Original:</strong> (${line.x1.toFixed(1)}, ${line.y1.toFixed(1)}) até (${line.x2.toFixed(1)}, ${line.y2.toFixed(1)})<br>
+        <strong>Recortada:</strong> (${clippedLine.x1.toFixed(1)}, ${clippedLine.y1.toFixed(1)}) até (${clippedLine.x2.toFixed(1)}, ${clippedLine.y2.toFixed(1)})<br>
         <strong>Comprimento:</strong> ${line.length.toFixed(2)}<br>
         <strong>Diagonal da janela:</strong> ${line.diagonal.toFixed(2)}<br>
         <strong>Ponto médio:</strong> (${midpointX.toFixed(1)}, ${midpointY.toFixed(1)})<br>
