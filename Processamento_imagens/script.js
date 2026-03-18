@@ -15,6 +15,7 @@ const imageInfoDiv = document.getElementById('imageInfo');
 const originalDimensionsDiv = document.getElementById('originalDimensions');
 const transformedDimensionsDiv = document.getElementById('transformedDimensions');
 const historyList = document.getElementById('historyList');
+const binaryThresholdInput = document.getElementById('binaryThreshold');
 
 // Botões de transformação
 const translateBtn = document.getElementById('translateBtn');
@@ -57,9 +58,51 @@ class ImageData2D {
 
     setPixel(x, y, value) {
         if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
-            this.pixels[y][x] = value;
+            this.pixels[y][x] = Math.max(0, Math.min(255, Math.round(value)));
         }
     }
+}
+
+function cloneImageData2D(imageData) {
+    const clone = new ImageData2D(imageData.width, imageData.height);
+
+    for (let y = 0; y < imageData.height; y++) {
+        for (let x = 0; x < imageData.width; x++) {
+            clone.setPixel(x, y, imageData.getPixel(x, y));
+        }
+    }
+
+    return clone;
+}
+
+function binarizeImageData(imageData, threshold = 127) {
+    const binary = new ImageData2D(imageData.width, imageData.height);
+
+    for (let y = 0; y < imageData.height; y++) {
+        for (let x = 0; x < imageData.width; x++) {
+            const value = imageData.getPixel(x, y) <= threshold ? 0 : 255;
+            binary.setPixel(x, y, value);
+        }
+    }
+
+    return binary;
+}
+
+function countBinaryPixels(imageData) {
+    let black = 0;
+    let white = 0;
+
+    for (let y = 0; y < imageData.height; y++) {
+        for (let x = 0; x < imageData.width; x++) {
+            if (imageData.getPixel(x, y) === 0) {
+                black++;
+            } else {
+                white++;
+            }
+        }
+    }
+
+    return { black, white };
 }
 
 // ===============================
@@ -185,18 +228,6 @@ function renderImage(imageData, canvas, ctx, dimensionsDiv) {
     dimensionsDiv.textContent = `${imageData.width} x ${imageData.height} pixels`;
 }
 
-function cloneImageData2D(imageData) {
-    const clone = new ImageData2D(imageData.width, imageData.height);
-
-    for (let y = 0; y < imageData.height; y++) {
-        for (let x = 0; x < imageData.width; x++) {
-            clone.setPixel(x, y, imageData.getPixel(x, y));
-        }
-    }
-
-    return clone;
-}
-
 function resetTransformState() {
     currentTransformMatrix = new TransformMatrix();
 }
@@ -267,7 +298,9 @@ function renderCurrentTransformation(useNearestNeighbor = currentInterpolationMo
 // ===============================
 function loadImage(arrayBuffer) {
     try {
-        originalImageData = parsePGM(arrayBuffer);
+        const parsedImage = parsePGM(arrayBuffer);
+        const threshold = parseInt(binaryThresholdInput.value, 10);
+        originalImageData = binarizeImageData(parsedImage, Number.isNaN(threshold) ? 127 : threshold);
         currentImageData = cloneImageData2D(originalImageData);
 
         originalWidth = originalImageData.width;
@@ -307,11 +340,15 @@ loadBtn.addEventListener('click', () => {
 // ATUALIZAÇÃO DA INTERFACE
 // ===============================
 function updateImageInfo() {
+    const counts = originalImageData ? countBinaryPixels(originalImageData) : { black: 0, white: 0 };
     imageInfoDiv.innerHTML = `
         <strong>Largura:</strong> ${originalWidth} px<br>
         <strong>Altura:</strong> ${originalHeight} px<br>
         <strong>Total de Pixels:</strong> ${originalWidth * originalHeight}<br>
-        <strong>Formato:</strong> PGM (Grayscale)
+        <strong>Formato:</strong> PGM binarizado<br>
+        <strong>Limiar:</strong> ${binaryThresholdInput.value}<br>
+        <strong>Pretos:</strong> ${counts.black}<br>
+        <strong>Brancos:</strong> ${counts.white}
     `;
 }
 
@@ -439,7 +476,9 @@ function bilinearInterpolation(imageData, x, y) {
     const R1 = Q11 * (1 - dx) + Q21 * dx;
     const R2 = Q12 * (1 - dx) + Q22 * dx;
 
-    return Math.round(R1 * (1 - dy) + R2 * dy);
+    const interpolated = Math.round(R1 * (1 - dy) + R2 * dy);
+    const threshold = parseInt(binaryThresholdInput.value, 10);
+    return interpolated <= (Number.isNaN(threshold) ? 127 : threshold) ? 0 : 255;
 }
 
 // INVERSÃO DE MATRIZ 3x3
@@ -575,8 +614,12 @@ reflectBtn.addEventListener('click', () => {
         return;
     }
 
+    const { x: cx, y: cy } = getCurrentImageCenter();
+    const t1 = TransformMatrix.translation(-cx, -cy);
     const ref = TransformMatrix.reflection(reflectX, reflectY);
-    applyTransformation(ref);
+    const t2 = TransformMatrix.translation(cx, cy);
+
+    applyTransformation(t2.multiply(ref).multiply(t1));
 
     const axis = [reflectX && 'X', reflectY && 'Y'].filter(Boolean).join(' e ');
     history.push(`Reflexão em ${axis}`);

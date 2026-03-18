@@ -18,6 +18,17 @@
                 <button id="loadBtn" class="btn-primary">Carregar Imagem PGM</button>
             </div>
 
+            <div class="section">
+                <h3>Binarização</h3>
+                <div class="input-group">
+                    <label>Limiar:</label>
+                    <input type="number" id="binaryThreshold" value="127" min="0" max="255" step="1">
+                </div>
+                <div class="info-box">
+                    A imagem carregada é convertida automaticamente para preto e branco antes das transformações.
+                </div>
+            </div>
+
             <div class="section info-section">
                 <h3>Informações da Imagem</h3>
                 <div id="imageInfo" class="info-box">
@@ -106,11 +117,11 @@
                 </div>
                 <div class="input-group">
                     <label>Centro X:</label>
-                    <input type="number" id="rotateCenterX" value="0" placeholder="auto">
+                    <input type="number" id="rotateCenterX" placeholder="auto">
                 </div>
                 <div class="input-group">
                     <label>Centro Y:</label>
-                    <input type="number" id="rotateCenterY" value="0" placeholder="auto">
+                    <input type="number" id="rotateCenterY" placeholder="auto">
                 </div>
                 <button id="rotateBtn" class="btn-transform">Aplicar Rotação</button>
             </div>
