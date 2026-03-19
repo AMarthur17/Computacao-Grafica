@@ -8,8 +8,11 @@ const polygonStatus = document.getElementById("polygon-status");
 const verticesInfo = document.getElementById("vertices-info");
 
 const polygonAlgorithmSelect = document.getElementById("polygon-algorithm");
+const lineModeSelect = document.getElementById("line-mode");
 const lineSpeedInput = document.getElementById("line-speed");
 const toggleAnimationBtn = document.getElementById("toggle-animation-btn");
+const applyManualLineBtn = document.getElementById("apply-manual-line-btn");
+const clearManualLineBtn = document.getElementById("clear-manual-line-btn");
 
 // Tolerancia numerica para comparar pontos e evitar problemas de ponto flutuante.
 const EPSILON = 1e-6;
@@ -67,6 +70,12 @@ let lastTransformMatrix = createIdentityMatrix();
 const animationState = {
     active: true,
     angleDeg: 0
+};
+
+const manualLineState = {
+    line: null,
+    clickStep: 0,
+    startPoint: null
 };
 
 function cloneVertices(vertices) {
@@ -178,6 +187,13 @@ function worldToCanvas(point) {
     return {
         x: canvas.width / 2 + point.x,
         y: canvas.height / 2 - point.y
+    };
+}
+
+function canvasToWorld(x, y) {
+    return {
+        x: x - canvas.width / 2,
+        y: canvas.height / 2 - y
     };
 }
 
@@ -421,6 +437,28 @@ function getRotatingLine(bounds) {
         center,
         length,
         diagonal
+    };
+}
+
+function getManualLine() {
+    if (!manualLineState.line) {
+        return null;
+    }
+
+    const { x1, y1, x2, y2 } = manualLineState.line;
+    const length = Math.hypot(x2 - x1, y2 - y1);
+
+    return {
+        x1,
+        y1,
+        x2,
+        y2,
+        center: {
+            x: (x1 + x2) / 2,
+            y: (y1 + y2) / 2
+        },
+        length,
+        diagonal: null
     };
 }
 
@@ -758,14 +796,26 @@ function formatVertices(vertices) {
 }
 
 function renderLineStatus(line, clippedLine) {
+    if (!line) {
+        lineStatus.innerHTML = `
+            <strong>Modo:</strong> Manual<br>
+            <strong>Status:</strong> defina a reta pelos campos ou com dois cliques no canvas.
+        `;
+        return;
+    }
+
     const midpointX = (line.x1 + line.x2) / 2;
     const midpointY = (line.y1 + line.y2) / 2;
+    const isManual = lineModeSelect.value === "manual";
+    const modeLabel = isManual ? "Manual" : "Animada";
+    const diagonalText = line.diagonal === null ? "Não se aplica" : line.diagonal.toFixed(2);
 
     if (!clippedLine.accepted) {
         lineStatus.innerHTML = `
+            <strong>Modo:</strong> ${modeLabel}<br>
             <strong>Original:</strong> (${line.x1.toFixed(1)}, ${line.y1.toFixed(1)}) até (${line.x2.toFixed(1)}, ${line.y2.toFixed(1)})<br>
             <strong>Comprimento:</strong> ${line.length.toFixed(2)}<br>
-            <strong>Diagonal da janela:</strong> ${line.diagonal.toFixed(2)}<br>
+            <strong>Diagonal da janela:</strong> ${diagonalText}<br>
             <strong>Ponto médio:</strong> (${midpointX.toFixed(1)}, ${midpointY.toFixed(1)})<br>
             <strong>Status:</strong> rejeitada por Cohen-Sutherland
         `;
@@ -773,13 +823,40 @@ function renderLineStatus(line, clippedLine) {
     }
 
     lineStatus.innerHTML = `
+        <strong>Modo:</strong> ${modeLabel}<br>
         <strong>Original:</strong> (${line.x1.toFixed(1)}, ${line.y1.toFixed(1)}) até (${line.x2.toFixed(1)}, ${line.y2.toFixed(1)})<br>
         <strong>Recortada:</strong> (${clippedLine.x1.toFixed(1)}, ${clippedLine.y1.toFixed(1)}) até (${clippedLine.x2.toFixed(1)}, ${clippedLine.y2.toFixed(1)})<br>
         <strong>Comprimento:</strong> ${line.length.toFixed(2)}<br>
-        <strong>Diagonal da janela:</strong> ${line.diagonal.toFixed(2)}<br>
+        <strong>Diagonal da janela:</strong> ${diagonalText}<br>
         <strong>Ponto médio:</strong> (${midpointX.toFixed(1)}, ${midpointY.toFixed(1)})<br>
         <strong>Status:</strong> ${clippedLine.clipped ? "reta parcialmente recortada" : "reta totalmente visível"}
     `;
+}
+
+function setManualLineFromInputs() {
+    const x1 = parseFloat(document.getElementById("line-x1").value);
+    const y1 = parseFloat(document.getElementById("line-y1").value);
+    const x2 = parseFloat(document.getElementById("line-x2").value);
+    const y2 = parseFloat(document.getElementById("line-y2").value);
+
+    if ([x1, y1, x2, y2].some(Number.isNaN)) {
+        alert("Preencha valores válidos para a reta manual.");
+        return;
+    }
+
+    manualLineState.line = { x1, y1, x2, y2 };
+    manualLineState.clickStep = 0;
+    manualLineState.startPoint = null;
+    lineModeSelect.value = "manual";
+    drawScene();
+}
+
+function clearManualLine() {
+    manualLineState.line = null;
+    manualLineState.clickStep = 0;
+    manualLineState.startPoint = null;
+    lineModeSelect.value = "animated";
+    drawScene();
 }
 
 function renderPolygonStatus(bounds) {
@@ -862,8 +939,8 @@ function updateInfoPanels(bounds, line, clippedLine) {
 
 function drawScene() {
     const bounds = getClipBounds();
-    const line = getRotatingLine(bounds);
-    const clippedLine = clipLineCohenSutherland(line, bounds);
+    const line = lineModeSelect.value === "manual" ? getManualLine() : getRotatingLine(bounds);
+    const clippedLine = line ? clipLineCohenSutherland(line, bounds) : { accepted: false, clipped: false };
     // Apenas um dos algoritmos de poligono e desenhado por vez no canvas,
     // mas ambos sao calculados para comparacao no painel lateral.
     const clippedPolygons = getSelectedPolygonResult(bounds);
@@ -886,16 +963,18 @@ function drawScene() {
     });
 
     // A reta original e desenhada primeiro; a parte visivel aparece por cima.
-    drawLineSegment(line, COLORS.lineOriginal, 2);
-    if (clippedLine.accepted) {
-        drawLineSegment(clippedLine, COLORS.lineClipped, 4);
+    if (line) {
+        drawLineSegment(line, COLORS.lineOriginal, 2);
+        if (clippedLine.accepted) {
+            drawLineSegment(clippedLine, COLORS.lineClipped, 4);
+        }
     }
 
     updateInfoPanels(bounds, line, clippedLine);
 }
 
 function animationLoop() {
-    if (animationState.active) {
+    if (animationState.active && lineModeSelect.value === "animated") {
         // Angulo negativo produz rotacao no sentido horario.
         const step = parseFloat(lineSpeedInput.value) || 0.5;
         animationState.angleDeg -= step;
@@ -911,6 +990,37 @@ document.getElementById("apply-transform-btn").addEventListener("click", applyTr
 document.getElementById("apply-window-btn").addEventListener("click", drawScene);
 document.getElementById("reset-line-btn").addEventListener("click", resetLineAnimation);
 polygonAlgorithmSelect.addEventListener("change", drawScene);
+lineModeSelect.addEventListener("change", drawScene);
+applyManualLineBtn.addEventListener("click", setManualLineFromInputs);
+clearManualLineBtn.addEventListener("click", clearManualLine);
+
+canvas.addEventListener("click", (event) => {
+    if (lineModeSelect.value !== "manual") {
+        return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const worldPoint = canvasToWorld(event.clientX - rect.left, event.clientY - rect.top);
+
+    if (manualLineState.clickStep === 0) {
+        manualLineState.startPoint = worldPoint;
+        manualLineState.clickStep = 1;
+        document.getElementById("line-x1").value = Math.round(worldPoint.x);
+        document.getElementById("line-y1").value = Math.round(worldPoint.y);
+    } else {
+        manualLineState.line = {
+            x1: Math.round(manualLineState.startPoint.x),
+            y1: Math.round(manualLineState.startPoint.y),
+            x2: Math.round(worldPoint.x),
+            y2: Math.round(worldPoint.y)
+        };
+        document.getElementById("line-x2").value = manualLineState.line.x2;
+        document.getElementById("line-y2").value = manualLineState.line.y2;
+        manualLineState.clickStep = 0;
+        manualLineState.startPoint = null;
+        drawScene();
+    }
+});
 
 toggleAnimationBtn.addEventListener("click", () => {
     animationState.active = !animationState.active;

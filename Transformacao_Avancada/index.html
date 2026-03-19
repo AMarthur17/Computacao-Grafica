@@ -103,6 +103,11 @@
             <section class="panel">
                 <h3>Reta Animada</h3>
                 <hr>
+                <label for="line-mode">Modo da reta</label>
+                <select id="line-mode">
+                    <option value="animated" selected>Animada do trabalho</option>
+                    <option value="manual">Manual para demonstração</option>
+                </select>
                 <p class="helper-text">
                     A reta possui comprimento maior que a diagonal da janela e gira no sentido horário ao redor do
                     centro da janela.
@@ -114,6 +119,30 @@
                 <div class="button-row">
                     <button id="toggle-animation-btn">Pausar animação</button>
                     <button id="reset-line-btn" class="secondary-btn">Resetar reta</button>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h3>Reta Manual</h3>
+                <hr>
+                <p class="helper-text">
+                    Use os campos ou faça dois cliques no canvas: o primeiro define o ponto inicial e o segundo define o ponto final.
+                </p>
+                <div class="input-row">
+                    <input type="number" id="line-x1" value="-220" step="10">
+                    <span>X1</span>
+                    <input type="number" id="line-y1" value="-60" step="10">
+                    <span>Y1</span>
+                </div>
+                <div class="input-row">
+                    <input type="number" id="line-x2" value="220" step="10">
+                    <span>X2</span>
+                    <input type="number" id="line-y2" value="90" step="10">
+                    <span>Y2</span>
+                </div>
+                <div class="button-row">
+                    <button id="apply-manual-line-btn">Aplicar reta manual</button>
+                    <button id="clear-manual-line-btn" class="secondary-btn">Limpar reta manual</button>
                 </div>
             </section>
 
