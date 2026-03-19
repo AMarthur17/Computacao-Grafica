@@ -51,7 +51,7 @@ h3 {
 canvas {
     border: 1px solid #555;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-    background-color: #f5f5f5;
+    background-color: #ffffff;
     display: block;
     margin-bottom: 0;
     width: min(64vw, 680px);
@@ -62,8 +62,9 @@ canvas {
 #viewport-canvas {
     width: min(46vw, 420px);
     max-width: 100%;
-    border: 1px solid #2f6f8a;
+    border: 1px solid #d6d6d6;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    background-color: #ffffff;
 }
 
 .projection-info {

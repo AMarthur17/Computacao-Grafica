@@ -1,9 +1,10 @@
-// Formas base disponiveis para demonstrar as transformacoes 2D.
+// Formas base com canto inferior esquerdo na origem, para o objeto inicial
+// nao nascer centrado no sistema cartesiano.
 const shapes = {
-    triangle: [{ x: 0, y: 58 }, { x: -50, y: -29 }, { x: 50, y: -29 }],
-    square: [{ x: -50, y: -50 }, { x: 50, y: -50 }, { x: 50, y: 50 }, { x: -50, y: 50 }],
-    pentagon: [{ x: 0, y: 80 }, { x: 76, y: 25 }, { x: 47, y: -65 }, { x: -47, y: -65 }, { x: -76, y: 25 }],
-    house: [{ x: -50, y: -50 }, { x: 50, y: -50 }, { x: 50, y: 50 }, { x: 0, y: 100 }, { x: -50, y: 50 }]
+    triangle: [{ x: 50, y: 87 }, { x: 0, y: 0 }, { x: 100, y: 0 }],
+    square: [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 }, { x: 0, y: 100 }],
+    pentagon: [{ x: 76, y: 145 }, { x: 152, y: 90 }, { x: 123, y: 0 }, { x: 29, y: 0 }, { x: 0, y: 90 }],
+    house: [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 }, { x: 50, y: 150 }, { x: 0, y: 100 }]
 };
 
 let originalVertices = [...shapes.square];

@@ -75,8 +75,8 @@ let edges = [];
 let faces = [];
 let currentObject = null;
 
-let cameraRotationX = 20;
-let cameraRotationY = 25;
+let cameraRotationX = 0;
+let cameraRotationY = 0;
 let cameraRotationZ = 0;
 let zoom = 100;
 
@@ -339,7 +339,7 @@ function drawAxesMain() {
 }
 
 function drawViewportGrid() {
-    vpCtx.fillStyle = "#f5f5f5";
+    vpCtx.fillStyle = "#ffffff";
     vpCtx.fillRect(0, 0, viewportCanvas.width, viewportCanvas.height);
 
     vpCtx.strokeStyle = "#ddd";
@@ -570,23 +570,12 @@ function setWorldBoundsFromProjectedPoints(projectedPoints) {
     document.getElementById("world-ymax").value = Math.round(cy + half);
 }
 
-function drawViewportScene(projectedWorldPoints) {
+function drawViewportScene() {
     drawViewportGrid();
 
     const { worldBounds, viewportBounds } = parsePipelineBounds();
     const viewportEnabled = document.getElementById("enable-viewport").checked;
     const clippingEnabled = document.getElementById("enable-poly-clipping").checked;
-
-    vpCtx.setLineDash([7, 4]);
-    vpCtx.strokeStyle = "#2f6f8a";
-    vpCtx.lineWidth = 2;
-    vpCtx.strokeRect(
-        viewportBounds.xmin,
-        viewportBounds.ymin,
-        viewportBounds.xmax - viewportBounds.xmin,
-        viewportBounds.ymax - viewportBounds.ymin
-    );
-    vpCtx.setLineDash([]);
 
     if (currentObject === null) {
         clipInfo.innerHTML = "<em>Aguardando objeto</em>";
@@ -598,7 +587,11 @@ function drawViewportScene(projectedWorldPoints) {
         return;
     }
 
-    const mappedVertices = projectedWorldPoints.map(point => worldToViewport(point, worldBounds, viewportBounds));
+    // Na viewport exibimos o objeto projetado no plano XY, para que a saida
+    // represente a forma 2D mapeada e nao a aparencia isometrica do canvas principal.
+    const mappedVertices = currentVertices.map((vertex) =>
+        worldToViewport({ x: vertex[0], y: vertex[1] }, worldBounds, viewportBounds)
+    );
 
     // Mostra as arestas mapeadas sem recorte em tracejado, como referencia visual.
     vpCtx.save();
@@ -616,6 +609,7 @@ function drawViewportScene(projectedWorldPoints) {
         clipInfo.innerHTML = `
             <div><strong>Arestas totais:</strong> ${edges.length}</div>
             <div><strong>Arestas visiveis:</strong> ${edges.length}</div>
+            <div><strong>Projecao da viewport:</strong> plano XY</div>
             <div><strong>Recorte:</strong> desabilitado</div>
         `;
         return;
@@ -648,6 +642,7 @@ function drawViewportScene(projectedWorldPoints) {
         <div><strong>Arestas visiveis:</strong> ${acceptedEdges}</div>
         <div><strong>Arestas recortadas:</strong> ${clippedEdges}</div>
         <div><strong>Arestas rejeitadas:</strong> ${rejectedEdges}</div>
+        <div><strong>Projecao da viewport:</strong> plano XY</div>
         <div><strong>Algoritmo:</strong> Cohen-Sutherland</div>
     `;
 }
@@ -870,9 +865,6 @@ function generateObject() {
     edges = obj.edges;
     faces = obj.faces;
 
-    const projectedPoints = currentVertices.map(v => projectIsometricPlane(v[0], v[1], v[2], true));
-    setWorldBoundsFromProjectedPoints(projectedPoints);
-
     draw();
 }
 
@@ -896,11 +888,6 @@ function updateView() {
     zoom = parseFloat(document.getElementById("zoom").value);
 
     document.getElementById("zoom-value").textContent = `${zoom}%`;
-
-    if (currentObject !== null) {
-        const projectedPoints = currentVertices.map(v => projectIsometricPlane(v[0], v[1], v[2], true));
-        setWorldBoundsFromProjectedPoints(projectedPoints);
-    }
 
     draw();
 }
@@ -948,7 +935,7 @@ function draw() {
         });
     }
 
-    drawViewportScene(projectedWorldPoints);
+    drawViewportScene();
     updateDisplay();
 }
 
