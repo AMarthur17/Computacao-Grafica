@@ -20,7 +20,7 @@ h3 {
 
 .container {
     display: flex;
-    height: 100vh;
+    height: calc(100vh - 64px);
     gap: 0;
     padding: 0;
 }
@@ -39,6 +39,8 @@ h3 {
 .left-sidebar {
     display: flex;
     flex-direction: column;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
 }
 
 .right-sidebar {

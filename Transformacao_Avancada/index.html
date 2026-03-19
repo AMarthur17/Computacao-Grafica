@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Item 2 - Recorte 2D</title>
+    <title>Recorte 2D</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="../nav.css">
 </head>
+
 <body class="with-global-header">
     <header class="global-header">
         <a class="global-brand" href="../index.html">Computação Gráfica</a>
@@ -26,145 +28,147 @@
         </nav>
     </header>
     <div class="page-shell">
-    <aside class="sidebar" id="left-bar">
-        <section class="panel">
-            <h3>Polígono Base</h3>
-            <hr>
-            <select id="shape-select">
-                <option value="triangle">Triângulo</option>
-                <option value="square" selected>Quadrado</option>
-                <option value="pentagon">Pentágono</option>
-                <option value="house">Casa</option>
-            </select>
-            <button id="reset-shape-btn">Resetar polígono</button>
-        </section>
+        <aside class="sidebar" id="left-bar">
+            <section class="panel">
+                <h3>Polígono Base</h3>
+                <hr>
+                <select id="shape-select">
+                    <option value="triangle">Triângulo</option>
+                    <option value="square" selected>Quadrado</option>
+                    <option value="pentagon">Pentágono</option>
+                    <option value="house">Casa</option>
+                </select>
+                <button id="reset-shape-btn">Resetar polígono</button>
+            </section>
 
-        <section class="panel">
-            <h3>Transformações 2D</h3>
-            <hr>
+            <section class="panel">
+                <h3>Transformações 2D</h3>
+                <hr>
 
-            <label for="tx">Translação</label>
-            <div class="input-row">
-                <input type="number" id="tx" value="0" step="10">
-                <span>X</span>
-                <input type="number" id="ty" value="0" step="10">
-                <span>Y</span>
+                <label for="tx">Translação</label>
+                <div class="input-row">
+                    <input type="number" id="tx" value="0" step="10">
+                    <span>X</span>
+                    <input type="number" id="ty" value="0" step="10">
+                    <span>Y</span>
+                </div>
+
+                <label for="rotation">Rotação (graus)</label>
+                <div class="input-row">
+                    <input type="number" id="rotation" value="0" step="5">
+                </div>
+
+                <label for="sx">Escala</label>
+                <div class="input-row">
+                    <input type="number" id="sx" value="1" step="0.1">
+                    <span>X</span>
+                    <input type="number" id="sy" value="1" step="0.1">
+                    <span>Y</span>
+                </div>
+
+                <label for="shx">Cisalhamento</label>
+                <div class="input-row">
+                    <input type="number" id="shx" value="0" step="0.1">
+                    <span>shX</span>
+                    <input type="number" id="shy" value="0" step="0.1">
+                    <span>shY</span>
+                </div>
+
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="reflect-x"> Refletir no eixo X</label>
+                    <label><input type="checkbox" id="reflect-y"> Refletir no eixo Y</label>
+                </div>
+
+                <button id="apply-transform-btn">Aplicar transformação</button>
+            </section>
+
+            <section class="panel">
+                <h3>Janela de Recorte</h3>
+                <hr>
+                <div class="input-row">
+                    <input type="number" id="clip-xmin" value="-150" step="10">
+                    <span>xMin</span>
+                    <input type="number" id="clip-xmax" value="150" step="10">
+                    <span>xMax</span>
+                </div>
+                <div class="input-row">
+                    <input type="number" id="clip-ymin" value="-110" step="10">
+                    <span>yMin</span>
+                    <input type="number" id="clip-ymax" value="110" step="10">
+                    <span>yMax</span>
+                </div>
+                <button id="apply-window-btn">Atualizar janela</button>
+            </section>
+
+            <section class="panel">
+                <h3>Reta Animada</h3>
+                <hr>
+                <p class="helper-text">
+                    A reta possui comprimento maior que a diagonal da janela e gira no sentido horário ao redor do
+                    centro da janela.
+                </p>
+                <label for="line-speed">Velocidade angular (graus por quadro)</label>
+                <div class="input-row single">
+                    <input type="number" id="line-speed" value="0.5" step="0.1" min="0.1">
+                </div>
+                <div class="button-row">
+                    <button id="toggle-animation-btn">Pausar animação</button>
+                    <button id="reset-line-btn" class="secondary-btn">Resetar reta</button>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h3>Recorte de Polígonos</h3>
+                <hr>
+                <label for="polygon-algorithm">Algoritmo exibido no canvas</label>
+                <select id="polygon-algorithm">
+                    <option value="sutherland-hodgman" selected>Sutherland-Hodgman</option>
+                    <option value="weiler-atherton">Weiler-Atherton</option>
+                </select>
+            </section>
+        </aside>
+
+        <main class="main">
+            <canvas id="canvas" width="860" height="680"></canvas>
+            <div class="legend">
+                <div><span class="legend-swatch clip-window"></span> Janela de recorte</div>
+                <div><span class="legend-swatch source-polygon"></span> Polígono original</div>
+                <div><span class="legend-swatch clipped-polygon"></span> Resultado do recorte</div>
+                <div><span class="legend-swatch source-line"></span> Reta original</div>
+                <div><span class="legend-swatch clipped-line"></span> Reta recortada</div>
             </div>
+            <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus e Vitor Raimundo</p>
+            <p id="credits2">Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
+        </main>
 
-            <label for="rotation">Rotação (graus)</label>
-            <div class="input-row">
-                <input type="number" id="rotation" value="0" step="5">
-            </div>
+        <aside class="sidebar" id="right-bar">
+            <section class="panel">
+                <h3>Matriz Aplicada</h3>
+                <hr>
+                <div id="matrix-info" class="code-panel"></div>
+            </section>
 
-            <label for="sx">Escala</label>
-            <div class="input-row">
-                <input type="number" id="sx" value="1" step="0.1">
-                <span>X</span>
-                <input type="number" id="sy" value="1" step="0.1">
-                <span>Y</span>
-            </div>
+            <section class="panel">
+                <h3>Status da Reta</h3>
+                <hr>
+                <div id="line-status"></div>
+            </section>
 
-            <label for="shx">Cisalhamento</label>
-            <div class="input-row">
-                <input type="number" id="shx" value="0" step="0.1">
-                <span>shX</span>
-                <input type="number" id="shy" value="0" step="0.1">
-                <span>shY</span>
-            </div>
+            <section class="panel">
+                <h3>Recorte de Polígonos</h3>
+                <hr>
+                <div id="polygon-status"></div>
+            </section>
 
-            <div class="checkbox-group">
-                <label><input type="checkbox" id="reflect-x"> Refletir no eixo X</label>
-                <label><input type="checkbox" id="reflect-y"> Refletir no eixo Y</label>
-            </div>
-
-            <button id="apply-transform-btn">Aplicar transformação</button>
-        </section>
-
-        <section class="panel">
-            <h3>Janela de Recorte</h3>
-            <hr>
-            <div class="input-row">
-                <input type="number" id="clip-xmin" value="-150" step="10">
-                <span>xMin</span>
-                <input type="number" id="clip-xmax" value="150" step="10">
-                <span>xMax</span>
-            </div>
-            <div class="input-row">
-                <input type="number" id="clip-ymin" value="-110" step="10">
-                <span>yMin</span>
-                <input type="number" id="clip-ymax" value="110" step="10">
-                <span>yMax</span>
-            </div>
-            <button id="apply-window-btn">Atualizar janela</button>
-        </section>
-
-        <section class="panel">
-            <h3>Reta Animada</h3>
-            <hr>
-            <p class="helper-text">
-                A reta possui comprimento maior que a diagonal da janela e gira no sentido horário ao redor do centro da janela.
-            </p>
-            <label for="line-speed">Velocidade angular (graus por quadro)</label>
-            <div class="input-row single">
-                <input type="number" id="line-speed" value="0.5" step="0.1" min="0.1">
-            </div>
-            <div class="button-row">
-                <button id="toggle-animation-btn">Pausar animação</button>
-                <button id="reset-line-btn" class="secondary-btn">Resetar reta</button>
-            </div>
-        </section>
-
-        <section class="panel">
-            <h3>Recorte de Polígonos</h3>
-            <hr>
-            <label for="polygon-algorithm">Algoritmo exibido no canvas</label>
-            <select id="polygon-algorithm">
-                <option value="sutherland-hodgman" selected>Sutherland-Hodgman</option>
-                <option value="weiler-atherton">Weiler-Atherton</option>
-            </select>
-        </section>
-    </aside>
-
-    <main class="main">
-        <canvas id="canvas" width="860" height="680"></canvas>
-        <div class="legend">
-            <div><span class="legend-swatch clip-window"></span> Janela de recorte</div>
-            <div><span class="legend-swatch source-polygon"></span> Polígono original</div>
-            <div><span class="legend-swatch clipped-polygon"></span> Resultado do recorte</div>
-            <div><span class="legend-swatch source-line"></span> Reta original</div>
-            <div><span class="legend-swatch clipped-line"></span> Reta recortada</div>
-        </div>
-        <p id="credits1">Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus e Vitor Raimundo</p>
-        <p id="credits2">Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
-    </main>
-
-    <aside class="sidebar" id="right-bar">
-        <section class="panel">
-            <h3>Matriz Aplicada</h3>
-            <hr>
-            <div id="matrix-info" class="code-panel"></div>
-        </section>
-
-        <section class="panel">
-            <h3>Status da Reta</h3>
-            <hr>
-            <div id="line-status"></div>
-        </section>
-
-        <section class="panel">
-            <h3>Recorte de Polígonos</h3>
-            <hr>
-            <div id="polygon-status"></div>
-        </section>
-
-        <section class="panel">
-            <h3>Vértices Atuais</h3>
-            <hr>
-            <div id="vertices-info" class="code-panel"></div>
-        </section>
-    </aside>
+            <section class="panel">
+                <h3>Vértices Atuais</h3>
+                <hr>
+                <div id="vertices-info" class="code-panel"></div>
+            </section>
+        </aside>
 
     </div>
     <script src="script.js"></script>
 </body>
+
 </html>

@@ -1,9 +1,9 @@
-// --- Formas na origem ---
+// --- Formas com canto inferior esquerdo na origem ---
 const shapes = {
-    triangle: [{ x: 0, y: 58 }, { x: -50, y: -29 }, { x: 50, y: -29 }],
-    square: [{ x: -50, y: -50 }, { x: 50, y: -50 }, { x: 50, y: 50 }, { x: -50, y: 50 }],
-    pentagon: [{ x: 0, y: 80 }, { x: 76, y: 25 }, { x: 47, y: -65 }, { x: -47, y: -65 }, { x: -76, y: 25 }],
-    house: [{ x: -50, y: -50 }, { x: 50, y: -50 }, { x: 50, y: 50 }, { x: 0, y: 100 }, { x: -50, y: 50 }]
+    triangle: [{ x: 50, y: 87 }, { x: 0, y: 0 }, { x: 100, y: 0 }],
+    square: [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 }, { x: 0, y: 100 }],
+    pentagon: [{ x: 76, y: 145 }, { x: 152, y: 90 }, { x: 123, y: 0 }, { x: 29, y: 0 }, { x: 0, y: 90 }],
+    house: [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 }, { x: 50, y: 150 }, { x: 0, y: 100 }]
 };
 
 let originalShapeVertices = [...shapes.square];
@@ -34,6 +34,9 @@ function createRotationMatrix(angleInDegrees) {
 function createScalingMatrix(sx, sy) {
     return [[sx, 0, 0], [0, sy, 0], [0, 0, 1]];
 }
+function createShearMatrix(shx, shy) {
+    return [[1, shx, 0], [shy, 1, 0], [0, 0, 1]];
+}
 function multiplyMatrices(A, B) {
     const result = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
     for (let i = 0; i < 3; i++) {
@@ -55,13 +58,14 @@ function multiplyMatrixVector(matrix, vector) {
 }
 
 // --- Aplicação TRS ---
-function applyTRS(tx = 0, ty = 0, angle = 0, sx = 1, sy = 1) {
+function applyTRS(tx = 0, ty = 0, angle = 0, sx = 1, sy = 1, shx = 0, shy = 0) {
     const T = createTranslationMatrix(tx, ty);
     const R = createRotationMatrix(angle);
     const S = createScalingMatrix(sx, sy);
-    const M = multiplyMatrices(T, multiplyMatrices(R, S));
+    const Sh = createShearMatrix(shx, shy);
+    const M = multiplyMatrices(T, multiplyMatrices(R, multiplyMatrices(Sh, S)));
 
-    currentShapeVertices = originalShapeVertices.map(v => multiplyMatrixVector(M, v));
+    currentShapeVertices = currentShapeVertices.map(v => multiplyMatrixVector(M, v));
     draw();
     showInfo(M);
 }
@@ -157,12 +161,14 @@ function showInfo(matrix) {
 
 // --- Eventos ---
 document.getElementById("btnApplyTransform").addEventListener("click", () => {
-    const tx = parseFloat(document.getElementById("translateX").value);
-    const ty = parseFloat(document.getElementById("translateY").value);
-    const angle = parseFloat(document.getElementById("rotationAngle").value);
-    const sx = parseFloat(document.getElementById("scaleX").value);
-    const sy = parseFloat(document.getElementById("scaleY").value);
-    applyTRS(tx, ty, angle, sx, sy);
+    const tx = parseFloat(document.getElementById("translateX").value) || 0;
+    const ty = parseFloat(document.getElementById("translateY").value) || 0;
+    const angle = parseFloat(document.getElementById("rotationAngle").value) || 0;
+    const sx = parseFloat(document.getElementById("scaleX").value) || 1;
+    const sy = parseFloat(document.getElementById("scaleY").value) || 1;
+    const shx = parseFloat(document.getElementById("shearX").value) || 0;
+    const shy = parseFloat(document.getElementById("shearY").value) || 0;
+    applyTRS(tx, ty, angle, sx, sy, shx, shy);
 });
 
 document.getElementById("btnResetShape").addEventListener("click", () => {
