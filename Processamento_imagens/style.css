@@ -56,6 +56,7 @@ h3 {
     flex-direction: column;
     min-width: 0;
     min-height: 0;
+    overflow-y: auto;
 }
 
 .main-content h1 {
@@ -74,9 +75,9 @@ h3 {
     align-items: flex-start;
     gap: 30px;
     flex-wrap: wrap;
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
+    flex: 0 0 auto;
+    min-height: auto;
+    overflow: visible;
     padding-right: 8px;
 }
 
@@ -151,6 +152,106 @@ canvas {
     font-size: 12px;
     color: #ccc;
     font-weight: bold;
+}
+
+.viewport-panel {
+    margin-top: 16px;
+    background: #202020;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.viewport-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.viewport-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #f0f0f0;
+}
+
+.viewport-size-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.viewport-size-controls select {
+    width: auto;
+    min-width: 150px;
+    margin: 0;
+    padding: 6px;
+}
+
+.viewport-size-controls label {
+    font-size: 12px;
+    color: #bbb;
+    font-weight: bold;
+}
+
+.viewport-size-controls input[type="number"] {
+    width: 76px;
+    padding: 6px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background: #2c2c2c;
+    color: #e0e0e0;
+    font-size: 13px;
+}
+
+.viewport-size-controls #applyViewportSizeBtn {
+    width: auto;
+    min-width: 130px;
+    margin: 0;
+    padding: 8px 12px;
+}
+
+.viewport-canvas-shell {
+    width: 100%;
+    overflow: auto;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background: #fff;
+    padding: 10px;
+}
+
+.viewport-offset-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.viewport-offset-controls label {
+    font-size: 12px;
+    color: #bbb;
+    font-weight: bold;
+}
+
+.viewport-offset-controls input[type="number"] {
+    width: 76px;
+    padding: 6px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background: #2c2c2c;
+    color: #e0e0e0;
+    font-size: 13px;
+}
+
+#viewportCanvas {
+    display: block;
+    margin: 0 auto;
+    border: 1px solid #c8c8c8;
+    image-rendering: pixelated;
 }
 
 /* Sections */
@@ -393,7 +494,7 @@ button:disabled {
 /* Credits */
 .credits {
     text-align: center;
-    margin-top: auto;
+    margin-top: 20px;
     padding-top: 20px;
     font-size: 14px;
     color: #888;

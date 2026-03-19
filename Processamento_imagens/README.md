@@ -4,19 +4,22 @@
 
 Este projeto implementa transformações geométricas em imagens binárias (formato PGM), cumprindo os requisitos do **Item 4** do trabalho de Computação Gráfica.
 
-## 🎯 Requisitos Atendidos
+## 🎯 Requisitos Atendidos (Item 4)
 
-✅ **Translação** - Desloca a imagem em X e Y  
-✅ **Escala** - Redimensiona a imagem (aumenta/diminui)  
-✅ **Rotação** - Gira a imagem em torno de um ponto  
-✅ **Reflexão** - Espelha a imagem horizontal e/ou verticalmente  
-✅ **Cisalhamento** - Distorce a imagem (shear)
+✅ **Translação** - desloca pixels no plano: $(X',Y')=(X+F_x,Y+F_y)$  
+✅ **Escala** - amplia/reduz dimensões (scaling/sizing)  
+✅ **Rotação** - gira por ângulo arbitrário com seno/cosseno  
+✅ **Reflexão** - flip horizontal/vertical (espelhamento)  
+✅ **Cisalhamento** - deforma a geometria via projeção afim
+
+Todas as operações são aplicadas sobre imagem binarizada (fundo preto/branco), conforme o enunciado.
 
 ## 🚀 Funcionalidades
 
 ### Carregamento de Imagens
 
 - **Upload manual**: Selecione qualquer arquivo `.pgm` do seu computador
+- **Exemplos prontos**: Carregue direto arquivos da pasta `assets/`
 
 ### Transformações Disponíveis
 
@@ -86,9 +89,17 @@ Reflexão:         Cisalhamento:
 - **Nearest Neighbor**: Mais rápido, seleciona o pixel mais próximo
 - **Bilinear**: Mais suave, calcula média ponderada de 4 pixels vizinhos
 
+Para imagens binárias, o resultado interpolado é rebinarizado com o limiar atual.
+
 ### Mapeamento Reverso
 
 Para cada pixel da imagem transformada, aplica-se a **transformação inversa** para encontrar o pixel correspondente na imagem original. Isso evita "buracos" na imagem resultante.
+
+### Convenção aplicada
+
+- Translação segue diretamente o modelo do livro: $x'=x+F_x$, $y'=y+F_y$.
+- Cisalhamento usa: $x'=x+sh_x\cdot y$, $y'=y+sh_y\cdot x$.
+- Rotação por ângulo positivo em torno do centro selecionado.
 
 ## 🎨 Mudanças Espaciais
 

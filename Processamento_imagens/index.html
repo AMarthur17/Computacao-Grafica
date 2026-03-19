@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="../nav.css">
 </head>
+
 <body class="with-global-header">
     <header class="global-header">
         <a class="global-brand" href="../index.html">Computação Gráfica</a>
@@ -33,6 +34,13 @@
             <div class="section">
                 <input type="file" id="fileInput" accept=".pgm">
                 <button id="loadBtn" class="btn-primary">Carregar Imagem PGM</button>
+                <label for="sampleSelect" style="margin-top: 10px; display: block; font-size: 13px; color: #bbb;">Ou use
+                    um exemplo:</label>
+                <select id="sampleSelect">
+                    <option value="">Selecione uma imagem do projeto</option>
+                    <option value="assets/t.pgm">t.pgm</option>
+                </select>
+                <button id="loadSampleBtn" class="btn-secondary">Carregar Exemplo</button>
             </div>
 
             <div class="section">
@@ -43,6 +51,7 @@
                 </div>
                 <div class="info-box">
                     A imagem carregada é convertida automaticamente para preto e branco antes das transformações.
+                    Alterar o limiar recompõe a base binária.
                 </div>
             </div>
 
@@ -80,6 +89,34 @@
                 </div>
             </div>
 
+            <section class="viewport-panel">
+                <div class="viewport-header">
+                    <h3>Viewport (Visualização Recortada)</h3>
+                    <div class="viewport-size-controls">
+                        <label for="viewportMode">Modo:</label>
+                        <select id="viewportMode">
+                            <option value="crop" selected>Recorte puro</option>
+                            <option value="fit">Ajuste proporcional</option>
+                        </select>
+                        <label for="viewportWidth">L:</label>
+                        <input type="number" id="viewportWidth" value="320" min="80" max="900" step="10">
+                        <label for="viewportHeight">A:</label>
+                        <input type="number" id="viewportHeight" value="220" min="80" max="900" step="10">
+                        <button id="applyViewportSizeBtn" class="btn-secondary">Aplicar tamanho</button>
+                    </div>
+                </div>
+                <div class="viewport-offset-controls">
+                    <label for="viewportOffsetX">Offset X:</label>
+                    <input type="number" id="viewportOffsetX" value="0" step="1">
+                    <label for="viewportOffsetY">Offset Y:</label>
+                    <input type="number" id="viewportOffsetY" value="0" step="1">
+                </div>
+                <div class="viewport-canvas-shell">
+                    <canvas id="viewportCanvas" width="320" height="220"></canvas>
+                </div>
+                <div id="viewportDimensions" class="dimensions">320 x 220 pixels</div>
+            </section>
+
             <div class="credits">
                 <p>Implementado por: Arthur Marques, Rodrigo Gomes, Vitor Jesus, Vítor Raimundo</p>
                 <p>Computação Gráfica - Prof. Robson Pequeno de Sousa</p>
@@ -89,6 +126,17 @@
         <!-- Sidebar Direita -->
         <div class="sidebar right-sidebar">
             <h2>Transformações</h2>
+
+            <div class="section">
+                <h3>Modelo Matemático</h3>
+                <div class="info-box" style="font-size: 12px; line-height: 1.5;">
+                    x' = x + Fx, y' = y + Fy<br>
+                    Escala: x' = Sx.x, y' = Sy.y<br>
+                    Rotação: usa seno e cosseno do ângulo<br>
+                    Reflexão: espelho nos eixos X e/ou Y<br>
+                    Cisalhamento: x' = x + Shx.y, y' = y + Shy.x
+                </div>
+            </div>
 
             <!-- Translação -->
             <div class="transform-section">
@@ -183,8 +231,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
     </div>
     <script src="script.js"></script>
 </body>

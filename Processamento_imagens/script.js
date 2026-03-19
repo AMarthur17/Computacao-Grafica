@@ -5,15 +5,26 @@ const fileInput = document.getElementById('fileInput');
 const loadBtn = document.getElementById('loadBtn');
 const resetBtn = document.getElementById('resetBtn');
 const clearBtn = document.getElementById('clearBtn');
+const sampleSelect = document.getElementById('sampleSelect');
+const loadSampleBtn = document.getElementById('loadSampleBtn');
 
 const originalCanvas = document.getElementById('originalCanvas');
 const transformedCanvas = document.getElementById('transformedCanvas');
 const originalCtx = originalCanvas.getContext('2d');
 const transformedCtx = transformedCanvas.getContext('2d');
+const viewportCanvas = document.getElementById('viewportCanvas');
+const viewportCtx = viewportCanvas.getContext('2d');
+const viewportModeSelect = document.getElementById('viewportMode');
+const viewportWidthInput = document.getElementById('viewportWidth');
+const viewportHeightInput = document.getElementById('viewportHeight');
+const viewportOffsetXInput = document.getElementById('viewportOffsetX');
+const viewportOffsetYInput = document.getElementById('viewportOffsetY');
+const applyViewportSizeBtn = document.getElementById('applyViewportSizeBtn');
 
 const imageInfoDiv = document.getElementById('imageInfo');
 const originalDimensionsDiv = document.getElementById('originalDimensions');
 const transformedDimensionsDiv = document.getElementById('transformedDimensions');
+const viewportDimensionsDiv = document.getElementById('viewportDimensions');
 const historyList = document.getElementById('historyList');
 const binaryThresholdInput = document.getElementById('binaryThreshold');
 
@@ -30,6 +41,7 @@ const shearBtn = document.getElementById('shearBtn');
 // ===============================
 let originalImageData = null; // Dados originais da imagem
 let currentImageData = null;  // Dados atuais (após transformações)
+let rawImageData = null;      // Dados em tons de cinza antes da binarização
 let originalWidth = 0;
 let originalHeight = 0;
 let history = [];
@@ -38,6 +50,8 @@ let currentInterpolationMode = true;
 let preserveOriginalFrame = false;
 
 const BACKGROUND_PIXEL = 255;
+const VIEWPORT_MIN_SIZE = 80;
+const VIEWPORT_MAX_SIZE = 900;
 
 // ===============================
 // ESTRUTURA DE DADOS DA IMAGEM
@@ -228,6 +242,105 @@ function renderImage(imageData, canvas, ctx, dimensionsDiv) {
     dimensionsDiv.textContent = `${imageData.width} x ${imageData.height} pixels`;
 }
 
+function parseViewportSize(value, fallbackValue) {
+    const parsed = parseInt(value, 10);
+    if (Number.isNaN(parsed)) return fallbackValue;
+    return Math.max(VIEWPORT_MIN_SIZE, Math.min(VIEWPORT_MAX_SIZE, parsed));
+}
+
+function applyViewportSize() {
+    const width = parseViewportSize(viewportWidthInput.value, viewportCanvas.width || 320);
+    const height = parseViewportSize(viewportHeightInput.value, viewportCanvas.height || 220);
+
+    viewportWidthInput.value = width;
+    viewportHeightInput.value = height;
+
+    viewportCanvas.width = width;
+    viewportCanvas.height = height;
+    viewportDimensionsDiv.textContent = `${width} x ${height} pixels`;
+
+    renderViewport();
+}
+
+function renderViewport() {
+    const w = viewportCanvas.width;
+    const h = viewportCanvas.height;
+
+    viewportCtx.fillStyle = '#ffffff';
+    viewportCtx.fillRect(0, 0, w, h);
+
+    if (!currentImageData) {
+        return;
+    }
+
+    const srcW = currentImageData.width;
+    const srcH = currentImageData.height;
+    if (srcW <= 0 || srcH <= 0) {
+        return;
+    }
+
+    const mode = viewportModeSelect ? viewportModeSelect.value : 'crop';
+    const viewportOffsetX = parseInt(viewportOffsetXInput.value, 10) || 0;
+    const viewportOffsetY = parseInt(viewportOffsetYInput.value, 10) || 0;
+
+    const viewportImageData = viewportCtx.createImageData(w, h);
+
+    if (mode === 'crop') {
+        const srcCenterX = (srcW - 1) / 2 + viewportOffsetX;
+        const srcCenterY = (srcH - 1) / 2 + viewportOffsetY;
+        const startX = Math.round(srcCenterX - (w - 1) / 2);
+        const startY = Math.round(srcCenterY - (h - 1) / 2);
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const srcX = startX + x;
+                const srcY = startY + y;
+                const value = currentImageData.getPixel(srcX, srcY, BACKGROUND_PIXEL);
+                const idx = (y * w + x) * 4;
+
+                viewportImageData.data[idx] = value;
+                viewportImageData.data[idx + 1] = value;
+                viewportImageData.data[idx + 2] = value;
+                viewportImageData.data[idx + 3] = 255;
+            }
+        }
+
+        viewportCtx.putImageData(viewportImageData, 0, 0);
+        return;
+    }
+
+    const scale = Math.min(w / srcW, h / srcH);
+    const drawW = Math.max(1, Math.round(srcW * scale));
+    const drawH = Math.max(1, Math.round(srcH * scale));
+    const fitOffsetX = Math.floor((w - drawW) / 2);
+    const fitOffsetY = Math.floor((h - drawH) / 2);
+    const mapX = srcW / drawW;
+    const mapY = srcH / drawH;
+
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            const idx = (y * w + x) * 4;
+            let value = BACKGROUND_PIXEL;
+
+            const insideDrawArea = x >= fitOffsetX && x < fitOffsetX + drawW && y >= fitOffsetY && y < fitOffsetY + drawH;
+            if (insideDrawArea) {
+                const localX = x - fitOffsetX;
+                const localY = y - fitOffsetY;
+                const srcX = Math.min(srcW - 1, Math.max(0, Math.round((localX + 0.5) * mapX - 0.5)));
+                const srcY = Math.min(srcH - 1, Math.max(0, Math.round((localY + 0.5) * mapY - 0.5)));
+                value = currentImageData.getPixel(srcX, srcY, BACKGROUND_PIXEL);
+            }
+
+            viewportImageData.data[idx] = value;
+            viewportImageData.data[idx + 1] = value;
+            viewportImageData.data[idx + 2] = value;
+            viewportImageData.data[idx + 3] = 255;
+        }
+    }
+
+    viewportCtx.putImageData(viewportImageData, 0, 0);
+}
+
 function resetTransformState() {
     currentTransformMatrix = new TransformMatrix();
 }
@@ -291,6 +404,7 @@ function renderCurrentTransformation(useNearestNeighbor = currentInterpolationMo
 
     currentImageData = newImageData;
     renderImage(currentImageData, transformedCanvas, transformedCtx, transformedDimensionsDiv);
+    renderViewport();
 }
 
 // ===============================
@@ -300,7 +414,8 @@ function loadImage(arrayBuffer) {
     try {
         const parsedImage = parsePGM(arrayBuffer);
         const threshold = parseInt(binaryThresholdInput.value, 10);
-        originalImageData = binarizeImageData(parsedImage, Number.isNaN(threshold) ? 127 : threshold);
+        rawImageData = parsedImage;
+        originalImageData = binarizeImageData(rawImageData, Number.isNaN(threshold) ? 127 : threshold);
         currentImageData = cloneImageData2D(originalImageData);
 
         originalWidth = originalImageData.width;
@@ -310,6 +425,7 @@ function loadImage(arrayBuffer) {
 
         renderImage(originalImageData, originalCanvas, originalCtx, originalDimensionsDiv);
         renderImage(currentImageData, transformedCanvas, transformedCtx, transformedDimensionsDiv);
+        renderViewport();
 
         updateImageInfo();
         history = [];
@@ -324,6 +440,30 @@ function loadImage(arrayBuffer) {
     }
 }
 
+function reloadBinaryFromThreshold() {
+    if (!rawImageData) {
+        return;
+    }
+
+    const threshold = parseInt(binaryThresholdInput.value, 10);
+    originalImageData = binarizeImageData(rawImageData, Number.isNaN(threshold) ? 127 : threshold);
+    currentImageData = cloneImageData2D(originalImageData);
+
+    originalWidth = originalImageData.width;
+    originalHeight = originalImageData.height;
+    resetTransformState();
+    currentInterpolationMode = true;
+    preserveOriginalFrame = false;
+
+    renderImage(originalImageData, originalCanvas, originalCtx, originalDimensionsDiv);
+    renderImage(currentImageData, transformedCanvas, transformedCtx, transformedDimensionsDiv);
+    renderViewport();
+    updateImageInfo();
+
+    history.push(`Limiar atualizado para ${binaryThresholdInput.value}`);
+    updateHistory();
+}
+
 loadBtn.addEventListener('click', () => {
     const file = fileInput.files[0];
     if (!file) {
@@ -335,6 +475,28 @@ loadBtn.addEventListener('click', () => {
     reader.onload = (e) => loadImage(e.target.result);
     reader.readAsArrayBuffer(file);
 });
+
+loadSampleBtn.addEventListener('click', async () => {
+    const selected = sampleSelect.value;
+    if (!selected) {
+        alert('Selecione uma imagem de exemplo primeiro.');
+        return;
+    }
+
+    try {
+        const response = await fetch(selected);
+        if (!response.ok) {
+            throw new Error(`Falha ao carregar ${selected}`);
+        }
+        const buffer = await response.arrayBuffer();
+        loadImage(buffer);
+    } catch (error) {
+        console.error(error);
+        alert('Não foi possível carregar o exemplo selecionado.');
+    }
+});
+
+binaryThresholdInput.addEventListener('change', reloadBinaryFromThreshold);
 
 // ===============================
 // ATUALIZAÇÃO DA INTERFACE
@@ -439,8 +601,8 @@ class TransformMatrix {
 
     static shear(shx, shy) {
         const m = new TransformMatrix();
-        m.matrix[0][1] = -shx;
-        m.matrix[1][0] = -shy;
+        m.matrix[0][1] = shx;
+        m.matrix[1][0] = shy;
         return m;
     }
 }
@@ -522,7 +684,7 @@ translateBtn.addEventListener('click', () => {
     const dx = parseFloat(document.getElementById('translateX').value) || 0;
     const dy = parseFloat(document.getElementById('translateY').value) || 0;
 
-    const matrix = TransformMatrix.translation(dx, -dy);
+    const matrix = TransformMatrix.translation(dx, dy);
     currentTransformMatrix = matrix.multiply(currentTransformMatrix);
     currentInterpolationMode = true;
     preserveOriginalFrame = true;
@@ -580,7 +742,7 @@ scaleBtn.addEventListener('click', () => {
 // ROTAÇÃO
 rotateBtn.addEventListener('click', () => {
     const angle = parseFloat(document.getElementById('rotateAngle').value) || 0;
-    const angleRad = -angle * Math.PI / 180;
+    const angleRad = angle * Math.PI / 180;
 
     let cx = parseFloat(document.getElementById('rotateCenterX').value);
     let cy = parseFloat(document.getElementById('rotateCenterY').value);
@@ -662,6 +824,7 @@ resetBtn.addEventListener('click', () => {
     currentImageData = cloneImageData2D(originalImageData);
 
     renderImage(currentImageData, transformedCanvas, transformedCtx, transformedDimensionsDiv);
+    renderViewport();
     history = [];
     updateHistory();
     console.log('Imagem resetada para original');
@@ -671,6 +834,7 @@ resetBtn.addEventListener('click', () => {
 clearBtn.addEventListener('click', () => {
     originalImageData = null;
     currentImageData = null;
+    rawImageData = null;
     originalWidth = 0;
     originalHeight = 0;
     history = [];
@@ -684,6 +848,8 @@ clearBtn.addEventListener('click', () => {
     originalCanvas.height = 0;
     transformedCanvas.width = 0;
     transformedCanvas.height = 0;
+
+    renderViewport();
 
     imageInfoDiv.innerHTML = 'Nenhuma imagem carregada';
     originalDimensionsDiv.textContent = '';
@@ -712,6 +878,14 @@ document.addEventListener('DOMContentLoaded', () => {
     rotateBtn.disabled = true;
     reflectBtn.disabled = true;
     shearBtn.disabled = true;
+
+    applyViewportSizeBtn.addEventListener('click', applyViewportSize);
+    viewportWidthInput.addEventListener('change', applyViewportSize);
+    viewportHeightInput.addEventListener('change', applyViewportSize);
+    viewportModeSelect.addEventListener('change', renderViewport);
+    viewportOffsetXInput.addEventListener('change', renderViewport);
+    viewportOffsetYInput.addEventListener('change', renderViewport);
+    applyViewportSize();
 
     console.log('Sistema de Processamento de Imagens inicializado');
     console.log('Carregue uma imagem PGM para começar');
