@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="../nav.css">
 </head>
+
 <body class="with-global-header">
     <header class="global-header">
         <a class="global-brand" href="../index.html">Computação Gráfica</a>
@@ -27,74 +28,75 @@
         </nav>
     </header>
     <div class="page-shell">
-    <div class="sidebar" id="left-bar">
-        <div class="info-section">
-            <h3>📐 Splines de Bézier Cúbicas</h3>
-            <hr>
-            <p style="font-size: 12px; color: #aaa;">Clique no canvas para adicionar 4 pontos de controle</p>
-        </div>
-
-        <div class="coordenadas-cursor">
-            <h3>📍 Coordenadas em Tempo Real</h3>
-            <hr>
-            <p id="live-coords">
-                <em>Mova o cursor sobre o canvas para ver as coordenadas.</em>
-            </p>
-        </div>
-
-        <div class="control-points-info">
-            <h3>🎯 Pontos de Controle</h3>
-            <hr>
-            <div id="points-list" style="font-size: 12px; margin-top: 10px;"></div>
-        </div>
-
-        <div class="bezier-controls">
-            <h3>⚙️ Controles</h3>
-            <hr>
-            <div style="margin-top: 15px;">
-                <label for="input-segments">Segmentos de Curva:</label>
-                <input type="number" id="input-segments" min="10" max="500" value="100" style="width: 80px;">
+        <div class="sidebar" id="left-bar">
+            <div class="info-section">
+                <h3>Splines de Bézier Cúbicas</h3>
+                <hr>
+                <p style="font-size: 12px; color: #aaa;">Clique no canvas para adicionar 4 pontos de controle</p>
             </div>
-            <div style="margin-top: 10px;">
-                <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="show-control-lines" checked>
-                    Mostrar linhas de controle
-                </label>
+
+            <div class="coordenadas-cursor">
+                <h3>Coordenadas em Tempo Real</h3>
+                <hr>
+                <p id="live-coords">
+                    <em>Mova o cursor sobre o canvas para ver as coordenadas.</em>
+                </p>
             </div>
-            <div style="margin-top: 10px;">
-                <label style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="show-control-points" checked>
-                    Mostrar pontos de controle
-                </label>
+
+            <div class="control-points-info">
+                <h3>Pontos de Controle</h3>
+                <hr>
+                <div id="points-list" style="font-size: 12px; margin-top: 10px;"></div>
             </div>
-            <button id="btn-clear" style="width: 100%; margin-top: 15px;">Limpar</button>
-            <button id="btn-reset-default" style="width: 100%; margin-top: 10px;">Carregar Padrão</button>
+
+            <div class="bezier-controls">
+                <h3>Controles</h3>
+                <hr>
+                <div style="margin-top: 15px;">
+                    <label for="input-segments">Segmentos de Curva:</label>
+                    <input type="number" id="input-segments" min="10" max="500" value="100" style="width: 80px;">
+                </div>
+                <div style="margin-top: 10px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="show-control-lines" checked>
+                        Mostrar linhas de controle
+                    </label>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="show-control-points" checked>
+                        Mostrar pontos de controle
+                    </label>
+                </div>
+                <button id="btn-clear" style="width: 100%; margin-top: 15px;">Limpar</button>
+                <button id="btn-reset-default" style="width: 100%; margin-top: 10px;">Carregar Padrão</button>
+            </div>
+
+            <div class="formula-info">
+                <h3>Fórmula de Bézier</h3>
+                <hr>
+                <p id="formula-text"
+                    style="font-size: 11px; font-family: 'Courier New', monospace; background: #2a2a2a; padding: 8px; border-radius: 4px; color: #aaa;">
+                    B(t) = (1-t)³·P₀ + 3(1-t)²t·P₁ + 3(1-t)t²·P₂ + t³·P₃<br>
+                    0 ≤ t ≤ 1
+                </p>
+            </div>
+
+            <div class="info-section" style="margin-top: 20px;">
+                <p id="instructions" style="font-size: 12px; color: #888; line-height: 1.6;">
+                    <strong>Como usar:</strong><br>
+                    1. Clique no canvas para adicionar até 4 pontos de controle<br>
+                    2. Arraste os pontos para modificar a curva<br>
+                    3. Ajuste os segmentos para suavidade
+                </p>
+            </div>
         </div>
 
-        <div class="formula-info">
-            <h3>📐 Fórmula de Bézier</h3>
-            <hr>
-            <p id="formula-text" style="font-size: 11px; font-family: 'Courier New', monospace; background: #2a2a2a; padding: 8px; border-radius: 4px; color: #aaa;">
-                B(t) = (1-t)³·P₀ + 3(1-t)²t·P₁ + 3(1-t)t²·P₂ + t³·P₃<br>
-                0 ≤ t ≤ 1
-            </p>
+        <div class="main">
+            <div id="bounds-info">Limites: X[-255, 255], Y[-255, 255]</div>
+            <h1>Splines de Bézier Cúbicas - Capítulo 13 (Livro Texto)</h1>
+            <canvas id="canvas" width="800" height="600"></canvas>
         </div>
-
-        <div class="info-section" style="margin-top: 20px;">
-            <p id="instructions" style="font-size: 12px; color: #888; line-height: 1.6;">
-                <strong>Como usar:</strong><br>
-                1. Clique no canvas para adicionar até 4 pontos de controle<br>
-                2. Arraste os pontos para modificar a curva<br>
-                3. Ajuste os segmentos para suavidade
-            </p>
-        </div>
-    </div>
-
-    <div class="main">
-        <div id="bounds-info">Limites: X[-255, 255], Y[-255, 255]</div>
-        <h1>🎨 Splines de Bézier Cúbicas - Capítulo 13 (Livro Texto)</h1>
-        <canvas id="canvas" width="800" height="600"></canvas>
-    </div>
 
     </div>
     <script src="script.js"></script>
