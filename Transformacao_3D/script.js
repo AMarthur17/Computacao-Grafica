@@ -443,6 +443,16 @@ function drawPolygonOnViewport(vertices, fill, stroke) {
     vpCtx.stroke();
 }
 
+function drawFaceOutlinesOnViewport(vertices, color = "#111") {
+    if (!vertices || vertices.length < 3) return;
+
+    for (let i = 0; i < vertices.length; i++) {
+        const p1 = vertices[i];
+        const p2 = vertices[(i + 1) % vertices.length];
+        drawLineDDA(vpCtx, p1.x, p1.y, p2.x, p2.y, color);
+    }
+}
+
 function polygonChanged(original, clipped, epsilon = 0.2) {
     if (original.length !== clipped.length) return true;
     for (let i = 0; i < original.length; i++) {
@@ -570,7 +580,7 @@ function setWorldBoundsFromProjectedPoints(projectedPoints) {
     document.getElementById("world-ymax").value = Math.round(cy + half);
 }
 
-function drawViewportScene() {
+function drawViewportScene(projectedWorldPoints) {
     drawViewportGrid();
 
     const { worldBounds, viewportBounds } = parsePipelineBounds();
@@ -587,11 +597,12 @@ function drawViewportScene() {
         return;
     }
 
-    // Na viewport exibimos o objeto projetado no plano XY, para que a saida
-    // represente a forma 2D mapeada e nao a aparencia isometrica do canvas principal.
-    const mappedVertices = currentVertices.map((vertex) =>
-        worldToViewport({ x: vertex[0], y: vertex[1] }, worldBounds, viewportBounds)
+    const mappedVertices = projectedWorldPoints.map((point) =>
+        worldToViewport(point, worldBounds, viewportBounds)
     );
+
+    let visibleFaces = 0;
+    let clippedFaces = 0;
 
     // Mostra as arestas mapeadas sem recorte em tracejado, como referencia visual.
     vpCtx.save();
@@ -609,11 +620,32 @@ function drawViewportScene() {
         clipInfo.innerHTML = `
             <div><strong>Arestas totais:</strong> ${edges.length}</div>
             <div><strong>Arestas visiveis:</strong> ${edges.length}</div>
-            <div><strong>Projecao da viewport:</strong> plano XY</div>
+            <div><strong>Projecao da viewport:</strong> paralela isometrica</div>
             <div><strong>Recorte:</strong> desabilitado</div>
         `;
         return;
     }
+
+    faces.forEach((face) => {
+        const faceVertices = face.map((vertexIndex) => mappedVertices[vertexIndex]);
+        const clippedFace = clipPolygonSutherlandHodgman(faceVertices, viewportBounds);
+
+        if (!clippedFace || clippedFace.length < 3) {
+            return;
+        }
+
+        visibleFaces++;
+        if (polygonChanged(faceVertices, clippedFace)) {
+            clippedFaces++;
+        }
+
+        drawPolygonOnViewport(
+            clippedFace,
+            "rgba(17, 17, 17, 0.04)",
+            "rgba(17, 17, 17, 0.0)"
+        );
+        drawFaceOutlinesOnViewport(clippedFace, "#111");
+    });
 
     let acceptedEdges = 0;
     let clippedEdges = 0;
@@ -642,8 +674,11 @@ function drawViewportScene() {
         <div><strong>Arestas visiveis:</strong> ${acceptedEdges}</div>
         <div><strong>Arestas recortadas:</strong> ${clippedEdges}</div>
         <div><strong>Arestas rejeitadas:</strong> ${rejectedEdges}</div>
-        <div><strong>Projecao da viewport:</strong> plano XY</div>
-        <div><strong>Algoritmo:</strong> Cohen-Sutherland</div>
+        <div><strong>Faces visiveis:</strong> ${visibleFaces}</div>
+        <div><strong>Faces recortadas:</strong> ${clippedFaces}</div>
+        <div><strong>Projecao da viewport:</strong> paralela isometrica</div>
+        <div><strong>Retas:</strong> Cohen-Sutherland</div>
+        <div><strong>Poligonos:</strong> Sutherland-Hodgman</div>
     `;
 }
 
@@ -935,7 +970,7 @@ function draw() {
         });
     }
 
-    drawViewportScene();
+    drawViewportScene(projectedWorldPoints);
     updateDisplay();
 }
 
